@@ -1,5 +1,5 @@
 import Hero from '@/components/Hero'
-import Services from '@/components/Fatures'
+import Services from '@/components/Features'
 import DemoTrades from '@/components/DemoTrades'
 import HowItWorks from '@/components/HowItWorks'
 import ChooseYourPlan from '@/components/ChooseYourPlan'

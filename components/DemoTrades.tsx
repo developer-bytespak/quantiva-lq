@@ -2,6 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { TrendingUp, Activity, Zap, CheckCircle, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import {
+  AnimatedCard,
+  CardBody,
+  CardDescription,
+  CardTitle,
+  CardVisual,
+} from "@/components/ui/animated-card-chart";
+import { Visual3 } from "@/components/ui/animated-card-chart";
 
 interface Trade {
   asset: string;
@@ -158,7 +166,7 @@ const TradingReplay: React.FC = () => {
           
           {/* Scanning Phase */}
           {phase === 'scan' && (
-            <div className="w-full max-w-4xl animate-appear">
+            <div className="w-full max-w-6xl animate-appear">
               <div className="relative group">
                 {/* Glow effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-blue-500/20 rounded-[3rem] blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-700"></div>
@@ -217,7 +225,7 @@ const TradingReplay: React.FC = () => {
 
           {/* Opportunities Phase */}
           {phase === 'opportunities' && (
-            <div className="w-full max-w-4xl animate-appear">
+            <div className="w-full max-w-6xl animate-appear">
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-cyan-500/20 rounded-[3rem] blur-2xl opacity-60 transition-opacity duration-700"></div>
                 
@@ -277,72 +285,117 @@ const TradingReplay: React.FC = () => {
                     <h2 className="text-4xl font-extralight text-white tracking-wider">Live Execution</h2>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {visibleTrades.map((trade, idx) => (
-                      <div
-                        key={idx}
-                        className="relative group/card animate-slideUp"
-                        style={{ animationDelay: `${idx * 150}ms` }}
-                      >
-                        <div className={`absolute inset-0 ${getPnlGlow(trade.pnl)} rounded-3xl blur-xl opacity-0 group-hover/card:opacity-100 transition-all duration-500`}></div>
-                        <div className="relative backdrop-blur-xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.1] rounded-3xl p-8 hover:border-white/[0.15] transition-all duration-500 hover:scale-[1.03] transform h-full flex flex-col">
-                          {/* Header */}
-                          <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-white font-light text-2xl">{trade.asset}</h3>
-                            <div className={`p-2 rounded-xl ${trade.pnl.startsWith('+') ? 'bg-cyan-500/10' : 'bg-rose-500/10'}`}>
-                              {trade.pnl.startsWith('+') ? (
-                                <ArrowUpRight className="text-cyan-400" size={20} strokeWidth={1.5} />
-                              ) : (
-                                <ArrowDownRight className="text-rose-400" size={20} strokeWidth={1.5} />
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Strategy */}
-                          <p className="text-gray-500 text-xs uppercase tracking-[0.2em] font-light mb-8">{trade.strategy}</p>
-
-                          {/* Waveform */}
-                          <div className="h-32 flex items-end gap-0.5 mb-8">
-                            {[...Array(40)].map((_, i) => (
-                              <div
-                                key={i}
-                                className={`flex-1 rounded-t-full transition-all duration-700 ${trade.pnl.startsWith('+') ? 'bg-gradient-to-t from-cyan-500/40 to-cyan-400/20' : 'bg-gradient-to-t from-rose-500/40 to-rose-400/20'}`}
-                                style={{
-                                  height: `${30 + Math.sin(i * 0.3) * 40 + Math.random() * 20}%`,
-                                  animationDelay: `${i * 15}ms`
-                                }}
-                              ></div>
-                            ))}
-                          </div>
-
-                          {/* Stats */}
-                          <div className="space-y-6 mb-6">
-                            <div>
-                              <p className="text-gray-500 text-xs uppercase tracking-[0.2em] mb-2 font-light">Entry Point</p>
-                              <p className="text-white font-light text-xl">${trade.entry.toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500 text-xs uppercase tracking-[0.2em] mb-2 font-light">Exit Point</p>
-                              <p className="text-white font-light text-xl">${trade.exit.toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-500 text-xs uppercase tracking-[0.2em] mb-2 font-light">Duration</p>
-                              <p className="text-white font-light text-xl">{trade.duration}</p>
-                            </div>
-                          </div>
-
-                          {/* P&L */}
-                          <div className="mt-auto pt-6 border-t border-white/[0.08]">
-                            <div className="flex items-center justify-between">
-                              <p className="text-gray-500 text-xs uppercase tracking-[0.2em] font-light">Return</p>
-                              <p className={`text-3xl font-extralight ${getPnlColor(trade.pnl)} tracking-tight`}>
-                                {trade.pnl}
-                              </p>
-                            </div>
-                          </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 lg:gap-8 justify-items-center items-start">
+                    {visibleTrades.map((trade, idx) => {
+                      const isPositive = trade.pnl.startsWith('+');
+                      
+                      // Different color schemes for each card with darker colors
+                      const colorSchemes = [
+                        {
+                          main: '#0891b2',      // cyan-600 (darker)
+                          secondary: '#06b6d4',  // cyan-500
+                          bg: 'bg-cyan-600/10',
+                          icon: 'text-cyan-500',
+                          text: 'text-cyan-500',
+                          percentage1: '+12.4%',
+                          percentage2: '+15.8%'
+                        },
+                        {
+                          main: '#9333ea',      // purple-600 (darker)
+                          secondary: '#a855f7',  // purple-500
+                          bg: 'bg-purple-600/10',
+                          icon: 'text-purple-500',
+                          text: 'text-purple-500',
+                          percentage1: '+18.2%',
+                          percentage2: '+22.1%'
+                        },
+                        {
+                          main: '#d97706',      // amber-600 (darker)
+                          secondary: '#f59e0b',  // amber-500
+                          bg: 'bg-amber-600/10',
+                          icon: 'text-amber-500',
+                          text: 'text-amber-500',
+                          percentage1: '+9.7%',
+                          percentage2: '+13.5%'
+                        }
+                      ];
+                      
+                      const colors = colorSchemes[idx % colorSchemes.length];
+                      const mainColor = isPositive ? colors.main : '#dc2626'; // red-600 for negative (darker)
+                      const secondaryColor = isPositive ? colors.secondary : '#ef4444'; // red-500 for negative
+                      
+                      return (
+                        <div
+                          key={idx}
+                          className="animate-slideUp w-full flex justify-center"
+                          style={{ animationDelay: `${idx * 150}ms` }}
+                        >
+                          <AnimatedCard className="w-full max-w-[356px] border-white/[0.1] bg-gradient-to-br from-white/[0.08] to-white/[0.03] backdrop-blur-xl dark:border-white/[0.1] dark:bg-gradient-to-br dark:from-white/[0.08] dark:to-white/[0.03]">
+                            <CardVisual className="w-full">
+                              <Visual3 
+                                mainColor={mainColor} 
+                                secondaryColor={secondaryColor}
+                                gridColor="#80808015"
+                                percentage1={colors.percentage1}
+                                percentage2={colors.percentage2}
+                              />
+                            </CardVisual>
+                            <CardBody className="border-white/[0.08] dark:border-white/[0.08] p-5">
+                              <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                  <CardTitle className="text-white dark:text-white text-2xl font-semibold tracking-tight">
+                                    {trade.asset}
+                                  </CardTitle>
+                                  <div className={`px-2.5 py-1 rounded-lg ${isPositive ? colors.bg : 'bg-rose-500/10'} border ${isPositive ? 'border-cyan-500/20' : 'border-rose-500/20'}`}>
+                                    {isPositive ? (
+                                      <ArrowUpRight className={colors.icon} size={16} strokeWidth={2} />
+                                    ) : (
+                                      <ArrowDownRight className="text-rose-400" size={16} strokeWidth={2} />
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-white/[0.05] to-white/[0.02] border border-white/[0.1] mb-5">
+                                <CardDescription className="text-gray-300 dark:text-gray-300 text-[11px] uppercase tracking-[0.15em] font-medium">
+                                  {trade.strategy}
+                                </CardDescription>
+                              </div>
+                              
+                              <div className="space-y-3.5 mb-5">
+                                <div className="flex justify-between items-center group/item">
+                                  <span className="text-gray-400 dark:text-gray-400 text-[11px] uppercase tracking-[0.12em] font-medium">Entry</span>
+                                  <span className="text-white dark:text-white text-base font-semibold tracking-tight">${trade.entry.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center group/item">
+                                  <span className="text-gray-400 dark:text-gray-400 text-[11px] uppercase tracking-[0.12em] font-medium">Exit</span>
+                                  <span className="text-white dark:text-white text-base font-semibold tracking-tight">${trade.exit.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-center group/item">
+                                  <span className="text-gray-400 dark:text-gray-400 text-[11px] uppercase tracking-[0.12em] font-medium">Duration</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <Activity className="text-gray-500" size={12} strokeWidth={2} />
+                                    <span className="text-white dark:text-white text-base font-semibold tracking-tight">{trade.duration}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="pt-5 border-t border-white/[0.1] dark:border-white/[0.1]">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-gray-400 dark:text-gray-400 text-[11px] uppercase tracking-[0.12em] font-medium">Return</span>
+                                  <div className="flex items-baseline gap-1.5">
+                                    <span className={`text-3xl font-bold ${isPositive ? colors.text : 'text-rose-400'} tracking-tight`}>
+                                      {trade.pnl}
+                                    </span>
+                                    <div className={`h-1.5 w-1.5 rounded-full ${isPositive ? colors.text : 'text-rose-400'} ${isPositive ? 'bg-cyan-500' : 'bg-rose-400'} opacity-60`}></div>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardBody>
+                          </AnimatedCard>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
