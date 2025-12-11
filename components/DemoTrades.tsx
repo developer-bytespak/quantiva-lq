@@ -35,6 +35,8 @@ const TradingReplay: React.FC = () => {
   const [isIntersecting, setIsIntersecting] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const simulationAbortRef = useRef<{ aborted: boolean }>({ aborted: false });
+  const simulationRunningRef = useRef(false);
 
   const scanMessages = [
     "Analyzing Market Volatility...",
@@ -57,71 +59,84 @@ const TradingReplay: React.FC = () => {
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Intersection Observer for scroll detection
+  // Intersection Observer for scroll detection — allow replay on every entry
   useEffect(() => {
     const startSimulation = async () => {
-      if (hasAnimated) return;
-      
+      if (simulationRunningRef.current) return;
+      simulationRunningRef.current = true;
       setHasAnimated(true);
+      simulationAbortRef.current.aborted = false;
+
       setVisibleOpportunities([]);
       setVisibleTrades([]);
       setScanProgress(0);
-      
+      setScanMessage('');
+
       // Phase 1: Scanning
       setPhase('scan');
       for (let i = 0; i < scanMessages.length; i++) {
+        if (simulationAbortRef.current.aborted) { simulationRunningRef.current = false; return; }
         setScanMessage(scanMessages[i]);
         setScanProgress((i + 1) / scanMessages.length * 100);
         await sleep(500);
       }
-      
+      if (simulationAbortRef.current.aborted) { simulationRunningRef.current = false; return; }
       await sleep(400);
-      
+
       // Phase 2: Opportunities
       setPhase('opportunities');
       for (let i = 0; i < opportunities.length; i++) {
+        if (simulationAbortRef.current.aborted) { simulationRunningRef.current = false; return; }
         await sleep(600);
         setVisibleOpportunities(prev => [...prev, opportunities[i]]);
       }
-      
+      if (simulationAbortRef.current.aborted) { simulationRunningRef.current = false; return; }
       await sleep(1000);
-      
+
       // Phase 3: Trades
       setPhase('trades');
       for (let i = 0; i < trades.length; i++) {
+        if (simulationAbortRef.current.aborted) { simulationRunningRef.current = false; return; }
         await sleep(1200);
         setVisibleTrades(prev => [...prev, trades[i]]);
       }
+
+      simulationRunningRef.current = false;
     };
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           setIsIntersecting(entry.isIntersecting);
-          // Start animation when section comes into view
-          if (entry.isIntersecting && !hasAnimated) {
+          if (entry.isIntersecting) {
             startSimulation();
+          } else {
+            // Abort running simulation and reset so it can replay on next entry
+            simulationAbortRef.current.aborted = true;
+            simulationRunningRef.current = false;
+            setHasAnimated(false);
+            setPhase('idle');
+            setVisibleOpportunities([]);
+            setVisibleTrades([]);
+            setScanProgress(0);
+            setScanMessage('');
           }
         });
       },
-      { 
-        threshold: 0.15, // Trigger when 15% of the section is visible
-        rootMargin: '0px 0px -50px 0px' // Start slightly before the section is fully visible
+      {
+        threshold: 0.15,
+        rootMargin: '0px 0px -50px 0px'
       }
     );
 
-    // Observe the main section container
     const currentSection = sectionRef.current;
-    if (currentSection) {
-      observer.observe(currentSection);
-    }
+    if (currentSection) observer.observe(currentSection);
 
     return () => {
-      if (currentSection) {
-        observer.unobserve(currentSection);
-      }
+      if (currentSection) observer.unobserve(currentSection);
+      simulationAbortRef.current.aborted = true;
     };
-  }, [hasAnimated]);
+  }, []);
 
   const getPnlColor = (pnl: string) => {
     return pnl.startsWith('+') ? 'text-cyan-400' : 'text-rose-400';
@@ -172,7 +187,7 @@ const TradingReplay: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-blue-500/20 rounded-[3rem] blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-700"></div>
                 
                 {/* Main card */}
-                <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/[0.07] to-white/[0.02] border border-white/[0.08] rounded-[3rem] p-16 shadow-2xl overflow-hidden">
+                <div className="relative backdrop-blur-xl bg-white/2 border border-transparent/10 rounded-[3rem] p-16 shadow-xl">
                   {/* Animated mesh background */}
                   <div className="absolute inset-0 opacity-30">
                     <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 animate-mesh"></div>
@@ -225,40 +240,49 @@ const TradingReplay: React.FC = () => {
 
           {/* Opportunities Phase */}
           {phase === 'opportunities' && (
-            <div className="w-full max-w-6xl animate-appear">
+            <div className="w-full max-w-6xl  animate-appear">
               <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-cyan-500/20 rounded-[3rem] blur-2xl opacity-60 transition-opacity duration-700"></div>
-                
-                <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/[0.07] to-white/[0.02] border border-white/[0.08] rounded-[3rem] p-16 shadow-2xl">
-                  <div className="flex flex-col items-center gap-6 mb-12">
+                <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-cyan-500/5 blur-3xl opacity-40 pointer-events-none" />
+
+                <div className="relative backdrop-blur-xl bg-white/2 border border-transparent/10 rounded-[3rem] p-16 shadow-xl">
+                  <div className="flex flex-col items-center gap-6 mb-6">
                     <div className="relative">
-                      <div className="absolute inset-0 bg-purple-400/30 rounded-full blur-xl animate-pulse-glow"></div>
-                      <Zap className="text-purple-400 relative z-10" size={56} strokeWidth={1.5} />
+                      <div className="absolute inset-0 bg-purple-400/30 rounded-full blur-xl animate-pulse-glow" />
+                      <Zap className="text-purple-400 relative z-10" size={48} strokeWidth={1.5} />
                     </div>
-                    <h2 className="text-4xl font-extralight text-white tracking-wider">Signals Detected</h2>
-                  </div>
-                  
-                  <div className="space-y-6">
+                    <h2 className="text-3xl font-extralight text-white tracking-wider">Signals Detected</h2>
+                  </div>  
+
+                  {/* Fixed-height container prevents reflow when cards append */}
+                  <div className="min-h-[460px] gap-8  space-y-6">
+                    {/* Provide placeholder (fixed size) so the layout is stable while items load */}
+                    {visibleOpportunities.length === 0 && (
+                      <div className="w-full flex items-center justify-center h-40">
+                        <div className="text-gray-400">Scanning for signals...</div>
+                      </div>
+                    )}
+
                     {visibleOpportunities.map((opp, idx) => (
-                      <div
-                        key={idx}
-                        className="relative group/card animate-slideUp"
-                        style={{ animationDelay: `${idx * 150}ms` }}
+                        <div
+                        key={opp.asset}
+                        className="relative animate-slideUp transform-gpu"
+                        style={{ animationDelay: `${idx * 160}ms` }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-3xl blur-xl opacity-0 group-hover/card:opacity-100 transition-all duration-500"></div>
-                        <div className="relative backdrop-blur-xl bg-gradient-to-br from-white/[0.08] to-white/[0.03] border border-white/[0.1] rounded-3xl p-8 hover:border-white/[0.15] transition-all duration-500 hover:scale-[1.02] transform">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-5">
-                              <div className="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20">
-                                <CheckCircle className="text-purple-400" size={28} strokeWidth={1.5} />
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/8 to-cyan-500/8 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
+                        <div className="relative backdrop-blur-xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/[0.06] rounded-2xl p-4 hover:scale-[1.01] transform transition-transform duration-300 h-20 flex items-center">
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-4">
+                              <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                                <CheckCircle className="text-purple-400" size={22} strokeWidth={1.4} />
                               </div>
                               <div>
-                                <span className="text-white font-light text-2xl block mb-1">{opp.asset}</span>
-                                <span className="text-gray-400 text-base font-light">{opp.signal}</span>
+                                <span className="text-white font-light text-lg block mb-0.5">{opp.asset}</span>
+                                <span className="text-gray-400 text-sm font-light">{opp.signal}</span>
                               </div>
                             </div>
-                            <div className="px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-400/20">
-                              <span className="text-purple-300 text-sm font-light tracking-widest uppercase">Active</span>
+
+                            <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-500/8 to-cyan-500/8 border border-purple-400/20">
+                              <span className="text-purple-300 text-xs font-medium tracking-widest uppercase">Active</span>
                             </div>
                           </div>
                         </div>
@@ -274,9 +298,9 @@ const TradingReplay: React.FC = () => {
           {phase === 'trades' && (
             <div className="w-full max-w-6xl animate-appear">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-[3rem] blur-2xl opacity-60"></div>
+                <div className="absolute inset-0 rounded-[2rem] bg-white/2 blur-xl opacity-20 pointer-events-none"></div>
                 
-                <div className="relative backdrop-blur-2xl bg-gradient-to-br from-white/[0.07] to-white/[0.02] border border-white/[0.08] rounded-[3rem] p-16 shadow-2xl">
+                <div className="relative backdrop-blur-xl bg-white/2 border border-transparent/10 rounded-[3rem] p-16 shadow-xl">
                   <div className="flex flex-col items-center gap-6 mb-16">
                     <div className="relative">
                       <div className="absolute inset-0 bg-cyan-400/30 rounded-full blur-xl animate-pulse-glow"></div>
@@ -285,7 +309,7 @@ const TradingReplay: React.FC = () => {
                     <h2 className="text-4xl font-extralight text-white tracking-wider">Live Execution</h2>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 lg:gap-8 justify-items-center items-start">
+                  <div className="h-[460px] grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center items-start">
                     {visibleTrades.map((trade, idx) => {
                       const isPositive = trade.pnl.startsWith('+');
                       
@@ -328,7 +352,7 @@ const TradingReplay: React.FC = () => {
                         <div
                           key={idx}
                           className="animate-slideUp w-full flex justify-center"
-                          style={{ animationDelay: `${idx * 150}ms` }}
+                          style={{ animationDelay: `${idx * 200}ms` }}
                         >
                           <AnimatedCard className="w-full max-w-[356px] border-white/[0.1] bg-gradient-to-br from-white/[0.08] to-white/[0.03] backdrop-blur-xl dark:border-white/[0.1] dark:bg-gradient-to-br dark:from-white/[0.08] dark:to-white/[0.03]">
                             <CardVisual className="w-full">
@@ -500,7 +524,10 @@ const TradingReplay: React.FC = () => {
         }
 
         .animate-slideUp {
-          animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+          animation-fill-mode: both;
+          will-change: transform, opacity;
+          backface-visibility: hidden;
         }
 
         @keyframes scaleUp {
