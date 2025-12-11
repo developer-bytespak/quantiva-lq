@@ -177,10 +177,10 @@ const DeepJudgeScroll = () => {
 
     const getSearchBarFinalWidth = () => {
       const width = window.innerWidth;
-      if (width < 768) return 22;        // Mobile
-      if (width < 1024) return 28;       // Tablet
-      if (width < 1440) return 32;       // Laptop
-      return 36;                          // Desktop
+      if (width < 768) return 20;        // Mobile
+      if (width < 1024) return 24;       // Tablet
+      if (width < 1440) return 26;       // Laptop
+      return 32;                          // Desktop
     };
 
     let searchBarFinalWidth = getSearchBarFinalWidth();
@@ -426,7 +426,7 @@ const DeepJudgeScroll = () => {
             className="w-full md:w-3/5 flex flex-col items-center text-center gap-8 px-8 opacity-0"
             style={{ transform: 'translateY(-100px)' }}
           >
-            <h1 className="text-2xl md:text-[5rem] font-medium leading-[1.1]">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-medium leading-[1.1] tracking-wider">
               Join us in shaping the future of Intelligent Trading
             </h1>
             <p className="font-sans text-base md:text-lg font-normal leading-relaxed text-gray-300">

@@ -266,7 +266,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
 
       {showNavigation && !loading && (
         <nav className="fixed top-4 left-0 right-0 z-40 flex items-center justify-between px-8">
-          <img src="/logo.png" alt="Quantiva" className="h-8" />
+          <img src="/logo.png" alt="Quantiva" className="h-12" />
         </nav>
       )}
 
