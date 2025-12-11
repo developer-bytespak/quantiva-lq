@@ -266,9 +266,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
 
       {showNavigation && !loading && (
         <nav className="fixed top-4 left-0 right-0 z-40 flex items-center justify-between px-8">
-          <h1 className="text-2xl font-light text-white tracking-wider">
-            <b>QUANTIVA</b>
-          </h1>
+          <img src="/logo.png" alt="Quantiva" className="h-8" />
         </nav>
       )}
 
@@ -285,9 +283,9 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
           >
             <div className="text-center text-white px-4 max-w-4xl">
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
+              <h1 className="text-6xl md:text-7xl font-bold mb-6 tracking-wide">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r text-white">
-                  The Future of Trading
+                  THE FUTURE OF TRADING
                 </span>
               </h1>
             </div>

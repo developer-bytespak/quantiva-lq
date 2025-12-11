@@ -16,6 +16,24 @@ const DeepJudgeScroll = () => {
   const featureBgRefs = useRef<(HTMLDivElement | null)[]>([]);
   const featureContentRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  const handleSubmit = () => {
+    if (email && email.includes('@')) {
+      setIsSubmitted(true);
+      console.log('Email submitted:', email);
+      // TODO: Add your email submission logic here (API call, etc.)
+      setTimeout(() => {
+        setEmail('');
+        setIsSubmitted(false);
+      }, 3000);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSubmit();
+    }
+  };
+
   useEffect(() => {
     // Inject styles to avoid hydration errors
     const styleId = 'how-it-works-styles';
@@ -94,9 +112,11 @@ const DeepJudgeScroll = () => {
       { top: 50, left: 20 },
       { top: 75, left: 50 },
       { top: 80, left: 75 },
-      { top: 85, left: 10 }, // Monitor your Performance - bottom left
-      { top: 50, left: 85 }, // AI Voice Assistant - center right
+      { top: 80, left: 15 }, 
+      { top: 50, left: 85 }, 
     ];
+    
+    const featureMergePosition = { top: 50, left: 54 };
 
     features.forEach((feature, index) => {
       if (feature) {
@@ -104,6 +124,8 @@ const DeepJudgeScroll = () => {
         gsap.set(feature, {
           top: `${featurePos.top}%`,
           left: `${featurePos.left}%`,
+          xPercent: -50,
+          yPercent: -50,
         });
       }
     });
@@ -154,7 +176,11 @@ const DeepJudgeScroll = () => {
     const targetHeight = 3 * remInPixels;
 
     const getSearchBarFinalWidth = () => {
-      return window.innerWidth < 1000 ? 24 : 30;
+      const width = window.innerWidth;
+      if (width < 768) return 22;        // Mobile
+      if (width < 1024) return 28;       // Tablet
+      if (width < 1440) return 32;       // Laptop
+      return 36;                          // Desktop
     };
 
     let searchBarFinalWidth = getSearchBarFinalWidth();
@@ -194,13 +220,15 @@ const DeepJudgeScroll = () => {
             if (feature) {
               const original = featureStartPositions[index];
               const currentTop =
-                original.top + (50 - original.top) * featureProgress;
+                original.top + (featureMergePosition.top - original.top) * featureProgress;
               const currentLeft =
-                original.left + (50 - original.left) * featureProgress;
+                original.left + (featureMergePosition.left - original.left) * featureProgress;
 
               gsap.set(feature, {
                 top: `${currentTop}%`,
                 left: `${currentLeft}%`,
+                xPercent: -50,
+                yPercent: -50,
               });
             }
           });
@@ -278,6 +306,16 @@ const DeepJudgeScroll = () => {
               height: `${height}rem`,
               transform: `translate(-50%, ${translateY}%)`,
             });
+            
+            // Hide input content during animation
+            const inputElement = searchBarRef.current.querySelector('input');
+            const buttonElement = searchBarRef.current.querySelector('button');
+            if (inputElement) {
+              gsap.set(inputElement, { opacity: 0 });
+            }
+            if (buttonElement) {
+              gsap.set(buttonElement, { opacity: 0 });
+            }
           }
         } else if (progress > 0.75) {
           if (searchBarRef.current) {
@@ -286,6 +324,16 @@ const DeepJudgeScroll = () => {
               height: '5rem',
               transform: `translate(-50%, 200%)`,
             });
+            
+            // Show input content after animation completes
+            const inputElement = searchBarRef.current.querySelector('input');
+            const buttonElement = searchBarRef.current.querySelector('button');
+            if (inputElement) {
+              gsap.set(inputElement, { opacity: 1 });
+            }
+            if (buttonElement) {
+              gsap.set(buttonElement, { opacity: 1 });
+            }
           }
         }
 
@@ -334,14 +382,12 @@ const DeepJudgeScroll = () => {
     <div className="bg-[#0f0f0f] text-white font-serif">
       {/* Spotlight Section */}
       <section ref={spotlightRef as React.RefObject<HTMLElement>} className="relative w-full h-screen overflow-hidden">
-        {/* Space-themed background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#000000] via-[#0a0a1a] to-[#000000] z-0">
+        {/* Space-themed background - ends with black */}
+        <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(to bottom, #000000 0%, #0a0a1a 30%, #0a0a1a 50%, #050505 70%, #000000 90%, #000000 100%)' }}>
           {/* Stars layer */}
           <div className="absolute inset-0 space-stars" />
-          {/* Deep space gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-blue-900/10" />
-          {/* Subtle nebula effect */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-indigo-900/5 to-transparent" />
+          {/* Deep space gradient overlay - vertical only for consistency */}
+          <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-blue-900/10" />
         </div>
 
         {/* Spotlight Content */}
@@ -398,7 +444,6 @@ const DeepJudgeScroll = () => {
                 featureRefs.current[index] = el;
               }}
               className="absolute inline-block px-4 md:px-6 py-4"
-              style={{ transform: 'translate(-50%, -50%)' }}
             >
               <div
                 ref={(el) => {
@@ -427,26 +472,12 @@ const DeepJudgeScroll = () => {
           className="absolute rounded-full border-[0.35rem] border-[#262626] bg-[#141414] opacity-0 flex items-center overflow-hidden z-50 pointer-events-auto"
           style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
         >
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (email && email.includes('@')) {
-                setIsSubmitted(true);
-                console.log('Email submitted:', email);
-                // TODO: Add your email submission logic here (API call, etc.)
-                setTimeout(() => {
-                  setEmail('');
-                  setIsSubmitted(false);
-                }, 3000);
-              }
-            }}
-            className="w-full h-full flex items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="w-full h-full flex items-center" onClick={(e) => e.stopPropagation()}>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onKeyPress={handleKeyPress}
               placeholder="Enter your Email to take part in this journey"
               className="w-full h-full bg-transparent border-none outline-none text-white font-sans text-base px-6 placeholder:text-gray-500 placeholder:font-medium flex-1"
               disabled={isSubmitted}
@@ -454,11 +485,10 @@ const DeepJudgeScroll = () => {
               onClick={(e) => e.stopPropagation()}
             />
             <button
-              type="submit"
+              onClick={handleSubmit}
               disabled={isSubmitted}
               className="px-4 h-full bg-transparent text-white hover:text-gray-300 transition-colors disabled:opacity-70 flex items-center justify-center flex-shrink-0"
               aria-label="Submit email"
-              onClick={(e) => e.stopPropagation()}
             >
               {isSubmitted ? (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -470,7 +500,7 @@ const DeepJudgeScroll = () => {
                 </svg>
               )}
             </button>
-          </form>
+          </div>
         </div>
       </section>
     </div>
