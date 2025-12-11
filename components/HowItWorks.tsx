@@ -180,7 +180,7 @@ const DeepJudgeScroll = () => {
       if (width < 768) return 20;        // Mobile
       if (width < 1024) return 24;       // Tablet
       if (width < 1440) return 26;       // Laptop
-      return 32;                          // Desktop
+      return 36;                          // Desktop
     };
 
     let searchBarFinalWidth = getSearchBarFinalWidth();

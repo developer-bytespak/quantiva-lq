@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@studio-freight/lenis": "^1.0.42",
+    "@vercel/blob": "^2.0.0",
     "clsx": "^2.1.1",
     "gsap": "^3.14.1",
     "lucide-react": "^0.344.0",
