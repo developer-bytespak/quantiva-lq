@@ -20,9 +20,23 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [loadedCount, setLoadedCount] = useState(0);
   const lenisRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Disable scrolling when loading
+    if (loading) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [loading]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -46,73 +60,107 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
     };
     setCanvasSize();
 
-    const currentFrame = (index: number) =>
-      `/Frames/frame_${index.toString().padStart(4, '0')}.png`;
-
     const images: HTMLImageElement[] = [];
     const frameData = { frame: 0 };
     let loadedImages = 0;
 
-    for (let i = 0; i < frameCount; i++) {
-      const img = new Image();
-      img.decoding = 'async';
-
-      const handleLoad = () => {
-        loadedImages++;
-        setLoadedCount(loadedImages);
-        if (loadedImages === frameCount) {
-          setTimeout(() => setLoading(false), 300);
+    // Fetch blob URLs from API
+    const fetchBlobUrls = async () => {
+      try {
+        const response = await fetch('/api/frames');
+        if (!response.ok) {
+          throw new Error('Failed to fetch blob URLs');
         }
-      };
-
-      const handleError = () => {
-        console.error(`Failed to load frame ${i + 1}`);
-        loadedImages++;
-        setLoadedCount(loadedImages);
-        if (loadedImages === frameCount) {
-          setTimeout(() => setLoading(false), 300);
-        }
-      };
-
-      img.addEventListener('load', handleLoad, { once: true });
-      img.addEventListener('error', handleError, { once: true });
-
-      img.src = currentFrame(i + 1);
-
-      if (img.complete) {
-        setTimeout(handleLoad, 0);
+        const data = await response.json();
+        return data.urls as string[];
+      } catch (error) {
+        console.error('Error fetching blob URLs:', error);
+        // Fallback to local paths if blob fetch fails
+        return Array.from({ length: frameCount }, (_, i) => 
+          `/Frames/frame_${(i + 1).toString().padStart(4, '0')}.png`
+        );
       }
+    };
 
-      images.push(img);
-    }
+    const loadImages = async () => {
+      const urls = await fetchBlobUrls();
+      
+      for (let i = 0; i < frameCount && i < urls.length; i++) {
+        const img = new Image();
+        img.decoding = 'async';
+        img.crossOrigin = 'anonymous';
+
+        const handleLoad = () => {
+          loadedImages++;
+          setLoadedCount(loadedImages);
+          if (loadedImages === frameCount) {
+            setTimeout(() => setLoading(false), 300);
+            // Setup animation after all images are loaded
+            setupAnimation();
+          }
+        };
+
+        const handleError = () => {
+          console.error(`Failed to load frame ${i + 1}`);
+          loadedImages++;
+          setLoadedCount(loadedImages);
+          if (loadedImages === frameCount) {
+            setTimeout(() => setLoading(false), 300);
+            // Setup animation even if some images failed
+            setupAnimation();
+          }
+        };
+
+        img.addEventListener('load', handleLoad, { once: true });
+        img.addEventListener('error', handleError, { once: true });
+
+        img.src = urls[i];
+
+        if (img.complete) {
+          setTimeout(handleLoad, 0);
+        }
+
+        images.push(img);
+      }
+    };
+
+    loadImages();
 
     const drawFrame = (index: number) => {
       const frameIndex = Math.min(Math.max(Math.floor(index), 0), frameCount - 1);
       const img = images[frameIndex];
       
-      if (!img || !img.complete) return;
-
-      const canvasWidth = canvas.width / (Math.min(window.devicePixelRatio, 2));
-      const canvasHeight = canvas.height / (Math.min(window.devicePixelRatio, 2));
-      const canvasRatio = canvasWidth / canvasHeight;
-      const imgRatio = img.width / img.height;
-
-      let drawWidth, drawHeight, offsetX, offsetY;
-
-      if (canvasRatio > imgRatio) {
-        drawWidth = canvasWidth;
-        drawHeight = canvasWidth / imgRatio;
-        offsetX = 0;
-        offsetY = (canvasHeight - drawHeight) / 2;
-      } else {
-        drawHeight = canvasHeight;
-        drawWidth = canvasHeight * imgRatio;
-        offsetX = (canvasWidth - drawWidth) / 2;
-        offsetY = 0;
+      // Check if image exists, is complete, and not broken
+      if (!img || !img.complete || img.naturalWidth === 0 || img.naturalHeight === 0) {
+        return;
       }
 
-      context.clearRect(0, 0, canvasWidth, canvasHeight);
-      context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      try {
+        const canvasWidth = canvas.width / (Math.min(window.devicePixelRatio, 2));
+        const canvasHeight = canvas.height / (Math.min(window.devicePixelRatio, 2));
+        const canvasRatio = canvasWidth / canvasHeight;
+        const imgRatio = img.width / img.height;
+
+        let drawWidth, drawHeight, offsetX, offsetY;
+
+        if (canvasRatio > imgRatio) {
+          drawWidth = canvasWidth;
+          drawHeight = canvasWidth / imgRatio;
+          offsetX = 0;
+          offsetY = (canvasHeight - drawHeight) / 2;
+        } else {
+          drawHeight = canvasHeight;
+          drawWidth = canvasHeight * imgRatio;
+          offsetX = (canvasWidth - drawWidth) / 2;
+          offsetY = 0;
+        }
+
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+        context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      } catch (error) {
+        console.error('Error drawing frame:', error);
+        // Don't throw, just skip this frame
+      }
     };
 
     const initSmoothScroll = async () => {
@@ -204,13 +252,23 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
           },
         });
       }
+
+      // Fade out scroll indicator on scroll
+      if (scrollIndicatorRef.current) {
+        gsap.to(scrollIndicatorRef.current, {
+          opacity: 0,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: container,
+            start: 'top top',
+            end: 'top+=100 top',
+            scrub: 0.5,
+          },
+        });
+      }
     };
 
-    if (images[0].complete) {
-      setupAnimation();
-    } else {
-      images[0].addEventListener('load', setupAnimation, { once: true });
-    }
+    // setupAnimation will be called after all images are loaded in loadImages
 
     let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
@@ -239,19 +297,14 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
     <>
       {loading && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black">
-          <div className="text-center">
-            <div className="mb-8">
-              <div className="w-64 h-1 bg-gray-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ease-out"
-                  style={{ width: `${(loadedCount / frameCount) * 100}%` }}
-                />
-              </div>
-            </div>
-            <p className="text-white text-lg font-light tracking-wider">
-              {Math.round((loadedCount / frameCount) * 100)}%
-            </p>
-            <p className="text-gray-500 text-sm mt-2">Loading frames...</p>
+          <div className="w-64 h-8 bg-gray-800 overflow-hidden">
+            <div
+              className="h-full transition-all duration-300 ease-out"
+              style={{ 
+                width: `${(loadedCount / frameCount) * 100}%`,
+                background: 'linear-gradient(to right, #f86c24, #ffa500, #ffd700)'
+              }}
+            />
           </div>
         </div>
       )}
@@ -288,6 +341,27 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
                   THE FUTURE OF TRADING
                 </span>
               </h1>
+            </div>
+          </div>
+
+          {/* Scroll indicator with glassmorphism */}
+          <div 
+            ref={scrollIndicatorRef}
+            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-none"
+          >
+            <div 
+              className="px-6 py-3 rounded-2xl"
+              style={{
+                background: 'rgba(239, 130, 22, 0.23137254901960785)',
+                borderRadius: '16px',
+                boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+                backdropFilter: 'blur(3.2px)',
+                WebkitBackdropFilter: 'blur(3.2px)'
+              }}
+            >
+              <p className="text-white text-sm font-light tracking-wider">
+                Scroll to begin the journey
+              </p>
             </div>
           </div>
         </div>

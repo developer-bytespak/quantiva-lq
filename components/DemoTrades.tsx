@@ -147,18 +147,14 @@ const TradingReplay: React.FC = () => {
   };
 
   return (
-    <div ref={sectionRef} className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center py-20">
-      {/* Animated background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="stars"></div>
-        <div className="stars2"></div>
-        <div className="stars3"></div>
+    <div ref={sectionRef} className="min-h-screen relative overflow-hidden flex items-center justify-center py-20">
+      {/* Space-themed background matching HowItWorks and Footer */}
+      <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(to bottom, #000000 0%, #0a0a1a 30%, #0a0a1a 50%, #050505 70%, #000000 90%, #000000 100%)' }}>
+        {/* Stars layer */}
+        <div className="absolute inset-0 space-stars" />
+        {/* Deep space gradient overlay - vertical only for consistency */}
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-blue-900/10" />
       </div>
-
-      {/* Gradient orbs with smoother animation */}
-      <div className="absolute top-20 left-1/4 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[120px] animate-float"></div>
-      <div className="absolute bottom-20 right-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] animate-float-delayed"></div>
-      <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-cyan-600/10 rounded-full blur-[80px] animate-float-slow"></div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 w-full">
         {/* Header */}
@@ -170,8 +166,7 @@ const TradingReplay: React.FC = () => {
           </div>
           <h1 className="text-7xl md:text-8xl font-extralight text-white mb-6 tracking-tight leading-none">
             Trading
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-gradient">Intelligence</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-gradient">  Intelligence</span>
           </h1>
           <p className="text-gray-500 text-xl font-light max-w-2xl mx-auto leading-relaxed">Experience autonomous execution powered by adaptive algorithms</p>
         </div>
