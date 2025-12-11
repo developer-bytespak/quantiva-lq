@@ -300,11 +300,17 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
 
     // Section change visuals
     const changeSection = (to: number, forceChange = false) => {
-      if (to === lastIndexRef.current) return;
+      if (to === lastIndexRef.current && !forceChange) return;
       if (isAnimatingRef.current && !forceChange) return;
       const from = lastIndexRef.current;
       const down = to > from;
       isAnimatingRef.current = true;
+      
+      // Update lastIndexRef immediately when forceChange (click) to prevent conflicts
+      // But only after we've captured 'from' and 'down' for animation direction
+      if (forceChange) {
+        lastIndexRef.current = to;
+      }
 
       if (!isControlled) setLocalIndex(to);
       onIndexChange?.(to);
@@ -397,8 +403,11 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
         });
       });
 
+      // Only update lastIndexRef at the end if we didn't update it immediately (for forceChange)
       gsap.delayedCall(D, () => {
-        lastIndexRef.current = to;
+        if (!forceChange) {
+          lastIndexRef.current = to;
+        }
         isAnimatingRef.current = false;
       });
     };
@@ -406,16 +415,53 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
     // programmatic navigation
     const goTo = (to: number, withScroll = true, forceChange = false) => {
       const clamped = clamp(to, 0, total - 1);
+      
+      // Recompute positions first to ensure accuracy
+      computePositions();
+      
+      // Ensure positions array is valid
+      if (!sectionTopRef.current || sectionTopRef.current.length === 0) {
+        computePositions();
+      }
+      
+      // Set snapping flag before making changes
       isSnappingRef.current = true;
+      
+      // Change section (this will update lastIndexRef if forceChange)
       changeSection(clamped, forceChange);
 
-      const pos = sectionTopRef.current[clamped];
-      const snapMs = durations.snap ?? 800;
-
       if (withScroll && typeof window !== "undefined") {
-        // If you installed Lenis, you can integrate here
-        window.scrollTo({ top: pos, behavior: "smooth" });
-        setTimeout(() => (isSnappingRef.current = false), snapMs);
+        const pos = sectionTopRef.current[clamped];
+        const snapMs = durations.snap ?? 800;
+        
+        // Temporarily disable ScrollTrigger to prevent interference
+        const st = stRef.current;
+        if (st) {
+          st.disable();
+        }
+        
+        // Use smooth scroll to the exact position
+        const targetPos = Math.max(0, pos || 0);
+        
+        // Scroll immediately - use both methods to ensure it works
+        window.scrollTo({ top: targetPos, behavior: "smooth" });
+        
+        // Fallback: also try direct assignment after a small delay
+        setTimeout(() => {
+          if (Math.abs(window.scrollY - targetPos) > 10) {
+            window.scrollTo({ top: targetPos, behavior: "auto" });
+          }
+        }, 100);
+        
+        // Re-enable ScrollTrigger after scroll animation completes
+        setTimeout(() => {
+          if (st) {
+            st.enable();
+            // Refresh to sync ScrollTrigger with new scroll position
+            ScrollTrigger.refresh();
+          }
+          isSnappingRef.current = false;
+        }, snapMs);
       } else {
         setTimeout(() => (isSnappingRef.current = false), 10);
       }
@@ -433,7 +479,11 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
     }));
 
     // click/hover on list items
-    const handleJump = (i: number) => {
+    const handleJump = (i: number, e?: React.MouseEvent) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       // Force change to allow clicking during animations
       goTo(i, true, true);
     };
@@ -532,7 +582,7 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
                           key={`L-${s.id ?? i}`}
                           className={`fx-item fx-left-item ${i === index ? "active" : ""}`}
                           ref={(el) => { if (el) leftItemRefs.current[i] = el; }}
-                          onClick={() => handleJump(i)}
+                          onClick={(e) => handleJump(i, e)}
                           onKeyDown={(e) => handleKeyDown(e, i)}
                           role="button"
                           tabIndex={0}
@@ -576,7 +626,7 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
                           key={`R-${s.id ?? i}`}
                           className={`fx-item fx-right-item ${i === index ? "active" : ""}`}
                           ref={(el) => { if (el) rightItemRefs.current[i] = el; }}
-                          onClick={() => handleJump(i)}
+                          onClick={(e) => handleJump(i, e)}
                           onKeyDown={(e) => handleKeyDown(e, i)}
                           role="button"
                           tabIndex={0}
@@ -665,16 +715,19 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
             align-items: center;
             height: 100%;
             padding: 0 var(--fx-grid-px);
+            z-index: 10;
           }
 
           .fx-left, .fx-right {
             height: 60vh; /* gives us room to center the active row */
             overflow: hidden;
             display: grid; align-content: center;
+            position: relative;
+            z-index: 20;
           }
           .fx-left { justify-items: start; }
           .fx-right { justify-items: end; }
-          .fx-track { will-change: transform; }
+          .fx-track { will-change: transform; position: relative; z-index: 21; }
 
           .fx-item {
             color: var(--fx-text);
@@ -688,8 +741,9 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
             font-size: clamp(1rem, 2.4vw, 1.8rem);
             user-select: none;
             cursor: pointer;
-            pointer-events: auto;
-            z-index: 10;
+            pointer-events: auto !important;
+            z-index: 25;
+            touch-action: manipulation;
           }
           .fx-item:hover {
             opacity: 0.7;
@@ -710,9 +764,12 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
 
           .fx-center {
             display: grid; place-items: center; text-align: center; height: 60vh; overflow: hidden;
+            pointer-events: none;
+            position: relative;
+            z-index: 1;
           }
-          .fx-featured { position: absolute; opacity: 0; visibility: hidden; }
-          .fx-featured.active { opacity: 1; visibility: visible; }
+          .fx-featured { position: absolute; opacity: 0; visibility: hidden; pointer-events: none; }
+          .fx-featured.active { opacity: 1; visibility: visible; pointer-events: none; }
           .fx-featured-title {
             margin: 0; color: var(--fx-text);
             font-weight: 900; letter-spacing: -0.01em;
