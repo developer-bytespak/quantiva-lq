@@ -6,7 +6,6 @@ const Hero: React.FC = () => {
     <section className="relative">
       <CanvasScrollAnimation 
         frameCount={359}
-        scrollDuration={4} /* total scroll length in viewport heights */
         useSmoothScroll={true}
         showNavigation={true}
       />
@@ -15,4 +14,3 @@ const Hero: React.FC = () => {
 }
 
 export default Hero
-
