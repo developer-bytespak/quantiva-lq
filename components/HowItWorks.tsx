@@ -1,77 +1,480 @@
-import React from 'react'
+'use client';
 
-const HowItWorks: React.FC = () => {
-  const steps = [
-    {
-      number: '01',
-      title: 'Sign Up',
-      description:
-        'Create your account in minutes with our simple registration process.',
-      icon: '👤',
-    },
-    {
-      number: '02',
-      title: 'Choose Your Plan',
-      description:
-        'Select the plan that best fits your trading needs and goals.',
-      icon: '📦',
-    },
-    {
-      number: '03',
-      title: 'Connect Your Account',
-      description:
-        'Securely connect your trading account or start with our demo.',
-      icon: '🔗',
-    },
-    {
-      number: '04',
-      title: 'Start Trading',
-      description:
-        'Begin trading with our advanced tools and analytics at your fingertips.',
-      icon: '🚀',
-    },
-  ]
+import React, { useEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+const DeepJudgeScroll = () => {
+  const spotlightRef = useRef<HTMLElement>(null);
+  const spotlightContentRef = useRef<HTMLDivElement>(null);
+  const headerContentRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const searchBarRef = useRef<HTMLDivElement>(null);
+  const [email, setEmail] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const featureBgRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const featureContentRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    // Inject styles to avoid hydration errors
+    const styleId = 'how-it-works-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Instrument+Serif:ital@0;1&family=Manrope:wght@200..800&display=swap');
+        
+        body {
+          font-family: 'Instrument Serif', serif;
+        }
+        
+        .font-serif {
+          font-family: 'Instrument Serif', serif;
+        }
+        
+        .font-mono {
+          font-family: 'DM Mono', monospace;
+        }
+        
+        .font-sans {
+          font-family: 'Manrope', sans-serif;
+        }
+        
+        @keyframes twinkle {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        
+        .space-stars {
+          background-image: 
+            radial-gradient(2px 2px at 20% 30%, white, transparent),
+            radial-gradient(2px 2px at 60% 70%, white, transparent),
+            radial-gradient(1px 1px at 50% 50%, white, transparent),
+            radial-gradient(1px 1px at 80% 10%, white, transparent),
+            radial-gradient(2px 2px at 90% 40%, white, transparent),
+            radial-gradient(1px 1px at 33% 60%, white, transparent),
+            radial-gradient(1px 1px at 66% 20%, white, transparent),
+            radial-gradient(2px 2px at 15% 80%, white, transparent),
+            radial-gradient(1px 1px at 45% 90%, white, transparent),
+            radial-gradient(2px 2px at 75% 15%, white, transparent),
+            radial-gradient(1px 1px at 10% 20%, white, transparent),
+            radial-gradient(1px 1px at 85% 60%, white, transparent),
+            radial-gradient(2px 2px at 40% 80%, white, transparent),
+            radial-gradient(1px 1px at 25% 40%, white, transparent),
+            radial-gradient(1px 1px at 70% 30%, white, transparent);
+          background-size: 100% 100%;
+          animation: twinkle 8s ease-in-out infinite;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Smooth scroll setup
+    let scrollTimeout: NodeJS.Timeout | undefined;
+    const smoothScroll = () => {
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+      }
+      scrollTimeout = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 100);
+    };
+    window.addEventListener('scroll', smoothScroll);
+
+    const features = featureRefs.current;
+    const featureBgs = featureBgRefs.current;
+
+    const featureStartPositions = [
+      { top: 25, left: 15 },
+      { top: 12.5, left: 50 },
+      { top: 22.5, left: 75 },
+      { top: 50, left: 20 },
+      { top: 75, left: 50 },
+      { top: 80, left: 75 },
+      { top: 85, left: 10 }, // Monitor your Performance - bottom left
+      { top: 50, left: 85 }, // AI Voice Assistant - center right
+    ];
+
+    features.forEach((feature, index) => {
+      if (feature) {
+        const featurePos = featureStartPositions[index];
+        gsap.set(feature, {
+          top: `${featurePos.top}%`,
+          left: `${featurePos.left}%`,
+        });
+      }
+    });
+
+    // Read dimensions from feature containers (they size to content naturally)
+    // Use a small delay to ensure DOM has rendered
+    const featureStartDimensions: Array<{ width: number; height: number }> = [];
+    
+    // Read dimensions immediately first
+    features.forEach((feature) => {
+      if (feature) {
+        const rect = feature.getBoundingClientRect();
+        featureStartDimensions.push({
+          width: Math.max(rect.width, 50), // Ensure minimum width
+          height: Math.max(rect.height, 20), // Ensure minimum height
+        });
+      }
+    });
+    
+    // Re-read after a short delay to get accurate dimensions after render
+    setTimeout(() => {
+      features.forEach((feature, index) => {
+        if (feature && featureStartDimensions[index]) {
+          const rect = feature.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            featureStartDimensions[index] = {
+              width: rect.width,
+              height: rect.height,
+            };
+            // Update the background to match
+            const bg = featureBgs[index];
+            if (bg) {
+              gsap.set(bg, {
+                width: `${rect.width}px`,
+                height: `${rect.height}px`,
+              });
+            }
+          }
+        }
+      });
+      ScrollTrigger.refresh();
+    }, 50);
+
+    const remInPixels = parseFloat(
+      getComputedStyle(document.documentElement).fontSize
+    );
+    const targetWidth = 3 * remInPixels;
+    const targetHeight = 3 * remInPixels;
+
+    const getSearchBarFinalWidth = () => {
+      return window.innerWidth < 1000 ? 24 : 30;
+    };
+
+    let searchBarFinalWidth = getSearchBarFinalWidth();
+
+    const handleResize = () => {
+      searchBarFinalWidth = getSearchBarFinalWidth();
+      ScrollTrigger.refresh();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    const scrollTrigger = ScrollTrigger.create({
+      trigger: spotlightRef.current,
+      start: 'top top',
+      end: `+=${window.innerHeight * 3}px`,
+      pin: true,
+      pinSpacing: true,
+      scrub: 1,
+      onUpdate: (self) => {
+        const progress = self.progress;
+
+        if (progress <= 0.3333) {
+          const spotlightHeaderProgress = progress / 0.3333;
+          gsap.set(spotlightContentRef.current, {
+            y: `${-100 * spotlightHeaderProgress}%`,
+          });
+        } else {
+          gsap.set(spotlightContentRef.current, {
+            y: '-100%',
+          });
+        }
+
+        if (progress >= 0 && progress <= 0.5) {
+          const featureProgress = progress / 0.5;
+
+          features.forEach((feature, index) => {
+            if (feature) {
+              const original = featureStartPositions[index];
+              const currentTop =
+                original.top + (50 - original.top) * featureProgress;
+              const currentLeft =
+                original.left + (50 - original.left) * featureProgress;
+
+              gsap.set(feature, {
+                top: `${currentTop}%`,
+                left: `${currentLeft}%`,
+              });
+            }
+          });
+
+          featureBgs.forEach((bg, index) => {
+            if (bg && featureStartDimensions[index]) {
+              const featureDim = featureStartDimensions[index];
+              
+              // Allow boxes to shrink from natural size to target size during transition
+              const currentWidth = featureDim.width + (targetWidth - featureDim.width) * featureProgress;
+              const currentHeight = featureDim.height + (targetHeight - featureDim.height) * featureProgress;
+              const currentBorderRadius = 0.5 + (25 - 0.5) * featureProgress;
+              const currentBorderWidth = 0.125 + (0.35 - 0.125) * featureProgress;
+
+              gsap.set(bg, {
+                width: `${currentWidth}px`,
+                height: `${currentHeight}px`,
+                borderRadius: `${currentBorderRadius}rem`,
+                borderWidth: `${currentBorderWidth}rem`,
+              });
+            }
+          });
+
+          if (progress >= 0 && progress <= 0.1) {
+            const featureTextProgress = progress / 0.1;
+            featureContentRefs.current.forEach((content) => {
+              if (content) {
+                gsap.set(content, {
+                  opacity: 1 - featureTextProgress,
+                });
+              }
+            });
+          } else if (progress > 0.1) {
+            featureContentRefs.current.forEach((content) => {
+              if (content) {
+                gsap.set(content, {
+                  opacity: 0,
+                });
+              }
+            });
+          }
+        }
+
+        if (progress >= 0.5) {
+          gsap.set(featuresRef.current, {
+            opacity: 0,
+          });
+        } else {
+          gsap.set(featuresRef.current, {
+            opacity: 1,
+          });
+        }
+
+        if (progress >= 0.5) {
+          gsap.set(searchBarRef.current, {
+            opacity: 1,
+          });
+        } else {
+          gsap.set(searchBarRef.current, {
+            opacity: 0,
+          });
+        }
+
+        if (progress >= 0.5 && progress <= 0.75) {
+          const searchBarProgress = (progress - 0.5) / 0.25;
+
+          const width = 3 + (searchBarFinalWidth - 3) * searchBarProgress;
+          const height = 3 + (5 - 3) * searchBarProgress;
+
+          const translateY = -50 + (200 - -50) * searchBarProgress;
+
+          if (searchBarRef.current) {
+            gsap.set(searchBarRef.current, {
+              width: `${width}rem`,
+              height: `${height}rem`,
+              transform: `translate(-50%, ${translateY}%)`,
+            });
+          }
+        } else if (progress > 0.75) {
+          if (searchBarRef.current) {
+            gsap.set(searchBarRef.current, {
+              width: `${searchBarFinalWidth}rem`,
+              height: '5rem',
+              transform: `translate(-50%, 200%)`,
+            });
+          }
+        }
+
+        if (progress >= 0.75) {
+          const finalHeaderProgress = (progress - 0.75) / 0.25;
+
+          gsap.set(headerContentRef.current, {
+            y: -50 + 50 * finalHeaderProgress,
+            opacity: finalHeaderProgress,
+          });
+        } else {
+          gsap.set(headerContentRef.current, {
+            y: -50,
+            opacity: 0,
+          });
+        }
+      },
+    });
+
+    return () => {
+      scrollTrigger.kill();
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', smoothScroll);
+      ScrollTrigger.getAll().forEach(st => st.kill());
+      
+      // Clean up style element
+      const styleElement = document.getElementById('how-it-works-styles');
+      if (styleElement) {
+        styleElement.remove();
+      }
+    };
+  }, []);
+
+  const features = [
+    'Sign Up & Connect Exchanges',
+    'AI Trading Strategies',
+    'Market Sentiment',
+    'Receive Trade Recommendations',
+    'Approve and Execute Trades',
+    'Optimize your Portfolio',
+    'Monitor your Performance',
+    'AI Voice Assistant',
+  ];
 
   return (
-    <section id="how-it-works" className="py-20 bg-gradient-to-br from-indigo-50 to-blue-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            How It Works
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Get started in four simple steps
-          </p>
+    <div className="bg-[#0f0f0f] text-white font-serif">
+      {/* Spotlight Section */}
+      <section ref={spotlightRef as React.RefObject<HTMLElement>} className="relative w-full h-screen overflow-hidden">
+        {/* Space-themed background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#000000] via-[#0a0a1a] to-[#000000] z-0">
+          {/* Stars layer */}
+          <div className="absolute inset-0 space-stars" />
+          {/* Deep space gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-blue-900/10" />
+          {/* Subtle nebula effect */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-indigo-900/5 to-transparent" />
         </div>
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {steps.map((step, index) => (
-              <div key={index} className="relative">
-                <div className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow h-full">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-5xl">{step.icon}</span>
-                    <span className="text-4xl font-bold text-blue-600 opacity-20">
-                      {step.number}
-                    </span>
-                  </div>
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-3">
-                    {step.title}
-                  </h3>
-                  <p className="text-gray-600">{step.description}</p>
-                </div>
-                {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-blue-400 text-2xl">
-                    →
-                  </div>
-                )}
-              </div>
-            ))}
+
+        {/* Spotlight Content */}
+        <div
+          ref={spotlightContentRef}
+          className="absolute w-full h-full flex justify-center items-center z-10"
+        >
+          <div 
+            className="absolute inset-0 scale-[0.3] md:scale-[0.75] opacity-25 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: 'url(/works/mesh.png)' }}
+          />
+          <div className="absolute scale-[0.8] md:scale-[2] opacity-25">
+            <svg width="800" height="800" viewBox="0 0 800 800" className="w-full h-full">
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                </pattern>
+              </defs>
+              <rect width="800" height="800" fill="url(#grid)" />
+            </svg>
+          </div>
+          <div className="text-center w-full md:w-2/5 px-8 flex flex-col items-center gap-4">
+            <h1 className="text-2xl md:text-[5rem] font-medium leading-[0.9]">
+              How It Works
+            </h1>
+            <p className="font-sans text-base md:text-lg font-normal leading-relaxed text-gray-300">
+              Get started in minutes and start trading smarter today
+            </p>
           </div>
         </div>
-      </div>
-    </section>
-  )
-}
 
-export default HowItWorks
+        {/* Header */}
+        <div className="absolute w-full h-full flex justify-center items-center z-40">
+          <div
+            ref={headerContentRef}
+            className="w-full md:w-3/5 flex flex-col items-center text-center gap-8 px-8 opacity-0"
+            style={{ transform: 'translateY(-100px)' }}
+          >
+            <h1 className="text-2xl md:text-[5rem] font-medium leading-[1.1]">
+              Join us in shaping the future of Intelligent Trading
+            </h1>
+            <p className="font-sans text-base md:text-lg font-normal leading-relaxed text-gray-300">
+              We're building something revolutionary that will transform how you trade. Join our community of forward-thinking traders and be among the first to experience the next evolution in AI-powered investment strategies.
+            </p>
+          </div>
+        </div>
 
+        {/* Features */}
+        <div ref={featuresRef} className="z-30">
+          {features.map((feature, index) => (
+            <div
+              key={index}
+              ref={(el) => {
+                featureRefs.current[index] = el;
+              }}
+              className="absolute inline-block px-4 md:px-6 py-4"
+              style={{ transform: 'translate(-50%, -50%)' }}
+            >
+              <div
+                ref={(el) => {
+                  featureBgRefs.current[index] = el;
+                }}
+                className="absolute inset-0 bg-[#141414] border-2 border-[#262626] rounded-lg"
+                style={{ boxSizing: 'border-box' }}
+              />
+              <div
+                ref={(el) => {
+                  featureContentRefs.current[index] = el;
+                }}
+                className="relative whitespace-nowrap"
+              >
+                <p className="uppercase font-mono font-normal text-[0.7rem] md:text-[0.85rem] leading-none">
+                  {feature}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Email Input Bar */}
+        <div
+          ref={searchBarRef}
+          className="absolute rounded-full border-[0.35rem] border-[#262626] bg-[#141414] opacity-0 flex items-center overflow-hidden z-50 pointer-events-auto"
+          style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (email && email.includes('@')) {
+                setIsSubmitted(true);
+                console.log('Email submitted:', email);
+                // TODO: Add your email submission logic here (API call, etc.)
+                setTimeout(() => {
+                  setEmail('');
+                  setIsSubmitted(false);
+                }, 3000);
+              }
+            }}
+            className="w-full h-full flex items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your Email to take part in this journey"
+              className="w-full h-full bg-transparent border-none outline-none text-white font-sans text-base px-6 placeholder:text-gray-500 placeholder:font-medium flex-1"
+              disabled={isSubmitted}
+              autoComplete="email"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              type="submit"
+              disabled={isSubmitted}
+              className="px-4 h-full bg-transparent text-white hover:text-gray-300 transition-colors disabled:opacity-70 flex items-center justify-center flex-shrink-0"
+              aria-label="Submit email"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {isSubmitted ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              )}
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default DeepJudgeScroll;

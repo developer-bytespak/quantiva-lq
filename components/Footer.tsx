@@ -1,9 +1,21 @@
+'use client';
+
 import React from 'react'
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="container mx-auto px-4 py-12">
+    <footer className="relative text-gray-300 overflow-hidden">
+      {/* Space-themed background matching HowItWorks */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#000000] via-[#0a0a1a] to-[#000000] z-0">
+        {/* Stars layer */}
+        <div className="absolute inset-0 space-stars" />
+        {/* Deep space gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-blue-900/10" />
+        {/* Subtle nebula effect */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-indigo-900/5 to-transparent" />
+      </div>
+
+      <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div>
