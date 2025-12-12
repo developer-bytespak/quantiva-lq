@@ -5,13 +5,13 @@ import { FullScreenScrollFX, FullScreenFXAPI } from "@/components/ui/full-screen
 
 const TripleTitle = ({ text }: { text: string }) => (
 	<div className="flex flex-col items-center justify-center gap-4">
-		<div className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-wider opacity-30 blur-[2px]">
+		<div className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider opacity-30 blur-[2px]">
 			{text}
 		</div>
-		<div className="text-2xl md:text-4xl lg:text-5xl font-black tracking-wider bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent [-webkit-text-fill-color:transparent] [-webkit-background-clip:text] shadow-2xl scale-110">
+		<div className="text-2xl md:text-3xl lg:text-4xl font-black tracking-wider bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent [-webkit-text-fill-color:transparent] [-webkit-background-clip:text] shadow-2xl scale-110">
 			{text}
 		</div>
-		<div className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-wider opacity-30 blur-[2px]">
+		<div className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-wider opacity-30 blur-[2px]">
 			{text}
 		</div>
 	</div>
