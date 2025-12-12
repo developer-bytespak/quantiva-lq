@@ -1,4 +1,5 @@
-import Hero from '@/components/Hero'
+import { HomepageHeader } from '@/components/homepage/homepage-header'
+import { HeroSection } from '@/components/homepage/hero-section'
 import Services from '@/components/Services'
 import DemoTrades from '@/components/DemoTrades'
 import HowItWorks from '@/components/HowItWorks'
@@ -9,7 +10,8 @@ import Footer from '@/components/Footer'
 export default function Home() {
   return (
     <main className="min-h-screen">
-      <Hero />
+      {/* <HomepageHeader /> */}
+      <HeroSection />
       <Services />
       <DemoTrades />
       <HowItWorks />
@@ -19,4 +21,3 @@ export default function Home() {
     </main>
   )
 }
-
