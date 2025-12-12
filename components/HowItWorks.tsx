@@ -479,7 +479,7 @@ const DeepJudgeScroll = () => {
               onChange={(e) => setEmail(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Enter your Email to take part in this journey"
-              className="w-full h-full bg-transparent border-none outline-none text-white font-sans text-base px-6 placeholder:text-gray-500 placeholder:font-medium flex-1"
+              className="w-full h-full bg-transparent border-none outline-none text-white font-sans text-base px-4 placeholder:text-gray-500 placeholder:font-medium flex-1"
               disabled={isSubmitted}
               autoComplete="email"
               onClick={(e) => e.stopPropagation()}
