@@ -24,6 +24,21 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
   const [loading, setLoading] = useState(true);
   const [loadedCount, setLoadedCount] = useState(0);
   const lenisRef = useRef<any>(null);
+  const [navEmail, setNavEmail] = useState('');
+  const [navSubmitted, setNavSubmitted] = useState(false);
+
+  const handleNavSubmit = () => {
+    if (navEmail && navEmail.includes('@')) {
+      setNavSubmitted(true);
+      console.log('Nav email submitted:', navEmail);
+      const footerEl = document.getElementById('footer');
+      if (footerEl) footerEl.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => {
+        setNavEmail('');
+        setNavSubmitted(false);
+      }, 3000);
+    }
+  };
 
   useEffect(() => {
     // Disable scrolling when loading
@@ -305,9 +320,78 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
       </div>
 
       {showNavigation && !loading && (
+        <>
         <nav className="fixed top-4 left-0 right-0 z-40 flex items-center justify-between px-8">
-          <img src="/logo.png" alt="Quantiva" className="h-12" />
+          <div className="flex flex-col items-start">
+            <img src="/logo.png" alt="Quantiva" className="h-12" />
+            <span className="coming-soon mt-1">Coming Soon</span>
+          </div>
+
+          <div className="flex items-center">
+            <div
+              className="relative rounded-full border-[0.35rem] border-[#262626] bg-[#141414] flex items-center overflow-hidden"
+              style={{ width: '240px', maxWidth: '28vw' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                type="email"
+                value={navEmail}
+                onChange={(e) => setNavEmail(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNavSubmit(); } }}
+                placeholder="Enter your email"
+                className="w-full h-8 bg-transparent border-none outline-none text-white font-sans text-xs px-3 placeholder:text-gray-500 placeholder:font-medium"
+                disabled={navSubmitted}
+                autoComplete="email"
+                aria-label="Email"
+                onClick={(e) => e.stopPropagation()}
+              />
+
+              <button
+                onClick={(e) => { e.preventDefault(); handleNavSubmit(); }}
+                disabled={navSubmitted}
+                className="px-2 h-8 bg-transparent text-white hover:text-gray-300 transition-colors disabled:opacity-70 flex items-center justify-center flex-shrink-0"
+                aria-label="Submit email"
+              >
+                {navSubmitted ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
         </nav>
+        {/* Load Orbitron for a robotic display look */}
+        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet" />
+        <style jsx>{`
+          .coming-soon {
+            font-family: 'Orbitron', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.6em;
+            font-size: 0.8rem;
+            padding-left: 0.6em;
+            margin-top: -0.6rem;
+            background: linear-gradient(90deg, #ffffff 0%, #ff9100ff 50%, #ffffff 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: comingGradient 2.6s linear infinite;
+            text-shadow: 0 10px 30px rgba(248,108,36,0.22), 0 0 14px rgba(255,255,255,0.12);
+            transform-origin: left center;
+          }
+
+          @keyframes comingGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `}</style>
+        </>
       )}
 
       <div
