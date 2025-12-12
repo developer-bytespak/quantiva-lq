@@ -148,7 +148,7 @@ const Footer: React.FC = () => {
         <div className="border-t border-gray-800 pt-8">
           <div className="flex justify-center items-center">
             <p className="text-lg text-gray-400 tracking-wider">
-              Designed and developed by Bytes Platform
+              Designed and developed by Bytes Platform Inc.
             </p>
           </div>
         </div>
