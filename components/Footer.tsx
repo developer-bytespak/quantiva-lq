@@ -4,7 +4,7 @@ import React from 'react'
 
 const Footer: React.FC = () => {
   return (
-    <footer className="relative text-gray-300 overflow-hidden">
+    <footer id="footer" className="relative text-gray-300 overflow-hidden">
       {/* Space-themed background - starts with black */}
       <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(to bottom, #000000 0%, #000000 10%, #050505 30%, #0a0a1a 50%, #000000 100%)' }}>
         {/* Stars layer */}
