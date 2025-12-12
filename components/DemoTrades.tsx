@@ -46,15 +46,16 @@ const TradingReplay: React.FC = () => {
   ];
 
   const opportunities: Opportunity[] = [
-    { asset: "BTC/USDT", signal: "Oversold Reversal" },
-    { asset: "ETH/USDT", signal: "Breakout Pattern" },
-    { asset: "SOL/USDT", signal: "Trend Acceleration" }
+    { asset: "BTC/USDT", signal: "Oversold reversal — high conviction" },
+    { asset: "ETH/USDT", signal: "Breakout pattern — volume surge" },
+    { asset: "AAPL/USD", signal: "Earnings beat — sustained momentum" },
+    { asset: "NVDA/USD", signal: "Analyst upgrade — strong directional bias" }
   ];
 
   const trades: Trade[] = [
     { asset: "BTC/USDT", entry: 43210, exit: 43540, pnl: "+0.81%", strategy: "Mean Reversion", duration: "38s" },
     { asset: "ETH/USDT", entry: 2190, exit: 2202, pnl: "+0.55%", strategy: "Breakout", duration: "42s" },
-    { asset: "SOL/USDT", entry: 98.4, exit: 97.8, pnl: "-0.23%", strategy: "Momentum", duration: "35s" }
+    { asset: "NVDA/USD", entry: 410.5, exit: 420.8, pnl: "+2.49%", strategy: "Event-Driven", duration: "2h" }
   ];
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -147,7 +148,7 @@ const TradingReplay: React.FC = () => {
   };
 
   return (
-    <div ref={sectionRef} className="min-h-screen relative overflow-hidden flex items-center justify-center py-20">
+    <div ref={sectionRef} className="min-h-screen relative overflow-hidden flex items-center justify-center py-12">
       {/* Space-themed background matching HowItWorks and Footer */}
       <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(to bottom, #000000 0%, #0a0a1a 30%, #0a0a1a 50%, #050505 70%, #000000 90%, #000000 100%)' }}>
         {/* Stars layer */}
@@ -158,21 +159,16 @@ const TradingReplay: React.FC = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 w-full">
         {/* Header */}
-        <div className="text-center mb-20">
-          <div className="inline-block mb-6">
-            <div className="px-6 py-2 rounded-full bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 backdrop-blur-xl">
-              <span className="text-cyan-400 text-sm font-light tracking-[0.2em] uppercase">Live Trading Intelligence</span>
-            </div>
-          </div>
-          <h1 className="text-7xl md:text-8xl font-extralight text-white mb-6 tracking-tight leading-none">
+        <div className="text-center">
+          <h1 className="text-7xl md:text-8xl font-extralight text-white tracking-tight leading-none">
             Trading
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-gradient">  Intelligence</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] animate-gradient">  Intelligence</span>
           </h1>
           <p className="text-gray-500 text-xl font-light max-w-2xl mx-auto leading-relaxed">Experience autonomous execution powered by adaptive algorithms</p>
         </div>
 
         {/* Main Container */}
-        <div ref={containerRef} className="relative min-h-[700px] flex items-center justify-center">
+        <div ref={containerRef} className="relative min-h-[520px] flex items-center justify-center">
           
           {/* Scanning Phase */}
           {phase === 'scan' && (
@@ -182,19 +178,19 @@ const TradingReplay: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-blue-500/20 rounded-[3rem] blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-700"></div>
                 
                 {/* Main card */}
-                <div className="relative backdrop-blur-xl bg-white/2 border border-transparent/10 rounded-[3rem] p-16 shadow-xl">
+                <div className="relative backdrop-blur-xl bg-white/2 border border-transparent/10 rounded-[3rem] p-10 shadow-xl">
                   {/* Animated mesh background */}
                   <div className="absolute inset-0 opacity-30">
                     <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 animate-mesh"></div>
                   </div>
 
                   <div className="relative z-10">
-                    <div className="flex flex-col items-center gap-8 mb-12">
-                      <div className="relative">
+                    <div className="flex items-center justify-center gap-4 mb-8">
+                      <div className="relative flex-shrink-0">
                         <div className="absolute inset-0 bg-cyan-400/30 rounded-full blur-xl animate-pulse-glow"></div>
-                        <Activity className="text-cyan-400 relative z-10" size={56} strokeWidth={1.5} />
+                        <Activity className="text-cyan-400 relative z-10" size={48} strokeWidth={1.5} />
                       </div>
-                      <h2 className="text-4xl font-extralight text-white tracking-wider">Analyzing Markets</h2>
+                      <h2 className="text-3xl md:text-4xl font-extralight text-white tracking-wider">Analyzing Markets</h2>
                     </div>
                     
                     {/* Fluid wave visualization */}
@@ -239,21 +235,22 @@ const TradingReplay: React.FC = () => {
               <div className="relative group">
                 <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-cyan-500/5 blur-3xl opacity-40 pointer-events-none" />
 
-                <div className="relative backdrop-blur-xl bg-white/2 border border-transparent/10 rounded-[3rem] p-16 shadow-xl">
-                  <div className="flex flex-col items-center gap-6 mb-6">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-purple-400/30 rounded-full blur-xl animate-pulse-glow" />
-                      <Zap className="text-purple-400 relative z-10" size={48} strokeWidth={1.5} />
+                <div className="relative backdrop-blur-xl bg-white/2 border border-transparent/10 rounded-[3rem] p-10 shadow-xl">
+                    <div className="flex items-center justify-center gap-4 mb-6">
+                      <div className="relative flex-shrink-0">
+                        <div className="absolute inset-0 bg-purple-400/30 rounded-full blur-xl animate-pulse-glow" />
+                        <Zap className="text-purple-400 relative z-10" size={48} strokeWidth={1.5} />
+                      </div>
+                      <h2 className="text-3xl md:text-4xl font-extralight text-white tracking-wider">Actionable Market Signals</h2>
                     </div>
-                    <h2 className="text-3xl font-extralight text-white tracking-wider">Signals Detected</h2>
-                  </div>  
+                    <p className="text-gray-400 text-sm max-w-2xl text-center mx-auto mb-6">High‑conviction setups surfaced by adaptive algorithms — real‑time, prioritized insights ready for execution.</p>
 
                   {/* Fixed-height container prevents reflow when cards append */}
-                  <div className="min-h-[460px] gap-8  space-y-6">
+                  <div className="min-h-[420px] gap-8  space-y-6">
                     {/* Provide placeholder (fixed size) so the layout is stable while items load */}
                     {visibleOpportunities.length === 0 && (
                       <div className="w-full flex items-center justify-center h-40">
-                        <div className="text-gray-400">Scanning for signals...</div>
+                        <div className="text-gray-400">Scanning markets for high‑conviction setups...</div>
                       </div>
                     )}
 
@@ -295,16 +292,16 @@ const TradingReplay: React.FC = () => {
               <div className="relative">
                 <div className="absolute inset-0 rounded-[2rem] bg-white/2 blur-xl opacity-20 pointer-events-none"></div>
                 
-                <div className="relative backdrop-blur-xl bg-white/2 border border-transparent/10 rounded-[3rem] p-16 shadow-xl">
-                  <div className="flex flex-col items-center gap-6 mb-16">
-                    <div className="relative">
+                <div className="relative backdrop-blur-xl bg-white/2 border border-transparent/10 rounded-[3rem] p-10 shadow-xl">
+                  <div className="flex items-center justify-center gap-4 mb-8">
+                    <div className="relative flex-shrink-0">
                       <div className="absolute inset-0 bg-cyan-400/30 rounded-full blur-xl animate-pulse-glow"></div>
-                      <TrendingUp className="text-cyan-400 relative z-10" size={56} strokeWidth={1.5} />
+                      <TrendingUp className="text-cyan-400 relative z-10" size={48} strokeWidth={1.5} />
                     </div>
-                    <h2 className="text-4xl font-extralight text-white tracking-wider">Live Execution</h2>
+                    <h2 className="text-3xl md:text-4xl font-extralight text-white tracking-wider">Live Execution</h2>
                   </div>
                   
-                  <div className="h-[460px] grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center items-start">
+                  <div className="h-[420px] grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center items-start">
                     {visibleTrades.map((trade, idx) => {
                       const isPositive = trade.pnl.startsWith('+');
                       
