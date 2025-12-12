@@ -410,8 +410,8 @@ const DeepJudgeScroll = () => {
             </svg>
           </div>
           <div className="text-center w-full md:w-2/5 px-8 flex flex-col items-center gap-4">
-            <h1 className="text-2xl md:text-[5rem] font-medium leading-[0.9]">
-              How It Works
+            <h1 className="text-2xl md:text-[4.5rem] bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent font-medium leading-[0.9] tracking-wider">
+              From Sign-Up to<br />Smart Trades
             </h1>
             <p className="font-sans text-base md:text-lg font-normal leading-relaxed text-gray-300">
               Get started in minutes and start trading smarter today
@@ -426,7 +426,7 @@ const DeepJudgeScroll = () => {
             className="w-full md:w-3/5 flex flex-col items-center text-center gap-8 px-8 opacity-0"
             style={{ transform: 'translateY(-100px)' }}
           >
-            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-medium leading-[1.1] tracking-wider">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-medium bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent leading-[1.1] tracking-wider">
               Join us in shaping the future of Intelligent Trading
             </h1>
             <p className="font-sans text-base md:text-lg font-normal leading-relaxed text-gray-300">

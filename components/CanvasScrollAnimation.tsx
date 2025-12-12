@@ -168,13 +168,13 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
         try {
           const Lenis = (await import('@studio-freight/lenis')).default;
           const lenisOptions: any = {
-            duration: 1.2,
+            duration: 1.8,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
             orientation: 'vertical',
             gestureOrientation: 'vertical',
             smoothWheel: true,
-            wheelMultiplier: 1,
-            touchMultiplier: 2,
+            wheelMultiplier: 0.7,
+            touchMultiplier: 1.5,
             infinite: false,
           };
 
@@ -213,7 +213,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
           trigger: container,
           start: 'top top',
           end: 'bottom bottom',
-          scrub: 1.5,
+          scrub: 3,
           onUpdate: (self) => {
             const progress = self.progress;
             const targetFrame = progress * (frameCount - 1);
@@ -235,20 +235,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
             trigger: container,
             start: `${fadeStartProgress * 100}% top`,
             end: `${fadeEndProgress * 100}% top`,
-            scrub: 0.5,
-          },
-        });
-      }
-
-      // Progress indicator
-      const progressBar = document.getElementById('progress-bar');
-      if (progressBar) {
-        ScrollTrigger.create({
-          trigger: container,
-          start: 'top top',
-          end: 'bottom bottom',
-          onUpdate: (self) => {
-            progressBar.style.width = `${self.progress * 100}%`;
+            scrub: 2,
           },
         });
       }
@@ -262,7 +249,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
             trigger: container,
             start: 'top top',
             end: 'top+=100 top',
-            scrub: 0.5,
+            scrub: 1.5,
           },
         });
       }
@@ -336,9 +323,9 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
           >
             <div className="text-center text-white px-4 max-w-4xl">
-              <h1 className="text-6xl md:text-7xl font-bold mb-6 tracking-wide">
+              <h1 className="text-6xl md:text-6xl font-bold mb-6 tracking-wider">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r text-white">
-                  THE FUTURE OF TRADING
+                  WITNESS TRADING REIMAGINED
                 </span>
               </h1>
             </div>
@@ -359,7 +346,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
                 WebkitBackdropFilter: 'blur(3.2px)'
               }}
             >
-              <p className="text-white text-sm font-light tracking-wider">
+              <p className="text-white text-md font-light tracking-wider">
                 Scroll to begin the journey
               </p>
             </div>

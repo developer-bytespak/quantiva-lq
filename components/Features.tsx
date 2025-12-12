@@ -6,7 +6,7 @@ import { FullScreenScrollFX, FullScreenFXAPI } from "@/components/ui/full-screen
 const sections = [
 	{
 		leftLabel: "Ai-Driven",
-		title: <>Trading Strategies</>,
+		title: <span className="tracking-wider">Trading Strategies</span>,
 		rightLabel: "Ai-Driven",
 		background:
 			"https://images.pexels.com/photos/3289156/pexels-photo-3289156.jpeg?cs=srgb&dl=pexels-alexfu-3289156.jpg&fm=jpg&_gl=1*1acr8i7*_ga*MTI3MjA2NDU0Mi4xNzU1NzM3ODI5*_ga_8JE65Q40S6*czE3NTU3NjkyMzgkbzMkZzEkdDE3NTU3Njk1MTckajYwJGwwJGgw",
@@ -14,7 +14,7 @@ const sections = [
 	},
 	{
 		leftLabel: "REAL TIME",
-		title: <>SENTIMENT ANALYSIS</>,
+		title: <span className="tracking-wider">SENTIMENT ANALYSIS</span>,
 		rightLabel: "REAL TIME",
 		background:
 			"https://images.pexels.com/photos/163790/at-night-under-a-lantern-guy-night-city-163790.jpeg",
@@ -22,16 +22,24 @@ const sections = [
 	},
 	{
 		leftLabel: "AUTOMATED",
-		title: <>PORTFOLIO OPTIMIZATION</>,
+		title: <span className="tracking-wider">PORTFOLIO OPTIMIZATION</span>,
 		rightLabel: "AUTOMATED",
 		background: "https://images.pexels.com/photos/9817/pexels-photo-9817.jpeg",
 		audioSrc: "/sfx/whoosh-02.mp3",
 	},
 	{
 		leftLabel: "SECURE",
-		title: <>MULTI-EXCHANGE CONNECTIVITY</>,
+		title: <span className="tracking-wider">MULTI-EXCHANGE CONNECTIVITY</span>,
 		rightLabel: "SECURE",
 		background: "https://images.pexels.com/photos/939807/pexels-photo-939807.jpeg",
+		audioSrc: "/sfx/whoosh-02.mp3",
+	},
+	{
+		leftLabel: "Innovative",
+		title: <span className="tracking-wider">Venture Capital Pool</span>,
+		rightLabel: "Innovative",
+		background:
+			"https://images.pexels.com/photos/2033990/pexels-photo-2033990.jpeg",
 		audioSrc: "/sfx/whoosh-02.mp3",
 	},
 ];
@@ -44,8 +52,8 @@ export default function Features() {
 			sections={sections}
 			header={
 				<>
-					<div className="text-3xl md:text-4xl lg:text-[3.5rem] leading-tight">POWERFUL FEATURES FOR</div>
-					<div className="text-4xl md:text-6xl lg:text-[5.5rem] font-extrabold text-orange-500 leading-tight">MODERN TRADERS</div>
+					<div className="text-3xl md:text-4xl lg:text-[3.5rem] leading-wide tracking-wider">POWERFUL FEATURES FOR</div>
+					<div className="text-4xl md:text-6xl lg:text-[5.5rem] font-extrabold bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent [-webkit-text-fill-color:transparent] [-webkit-background-clip:text] leading-wide tracking-wider">MODERN TRADERS</div>
 				</>
 			}
 			footer={<div></div>}
