@@ -52,3 +52,9 @@ body {
   animation: twinkle 8s ease-in-out infinite;
 }
 
+.coming-soon-nav {
+  color: #aaaaaa;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+

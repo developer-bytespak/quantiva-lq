@@ -701,10 +701,12 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
           .fx-bg-overlay { position: absolute; inset: 0; background: var(--fx-overlay); }
 
           .fx-header {
-            grid-column: 1 / 13; align-self: start; padding-top: 6vh;
+            grid-column: 1 / 13; align-self: start; padding-top: 8vh;
             /* Use global font (inherit) and reduced sizes to avoid overlap on large screens */
-            font-size: clamp(1.2rem, 4.5vw, 3.6rem);
+            font-size: clamp(2rem, 4.5vw, 3.6rem);
             line-height: 0.95; text-align: center; color: var(--fx-text);
+            position: relative;
+            z-index: 5;
           }
           .fx-header > * { display: block; }
 
@@ -738,7 +740,7 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
             opacity: 0.35;
             transition: opacity 0.3s ease, transform 0.3s ease;
             position: relative;
-            font-size: clamp(1rem, 2.4vw, 1.8rem);
+            font-size: clamp(1.4rem, 2.4vw, 1.8rem);
             user-select: none;
             cursor: pointer;
             pointer-events: auto !important;
@@ -774,7 +776,7 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
             margin: 0; color: var(--fx-text);
             font-weight: 900; letter-spacing: -0.01em;
             /* Smaller, responsive featured title */
-            font-size: clamp(1rem, 4vw, 2.8rem);
+            font-size: clamp(1.6rem, 4vw, 2.8rem);
           }
           .fx-word-mask { display: inline-block; overflow: hidden; vertical-align: middle; }
           .fx-word { display: inline-block; vertical-align: middle; }
@@ -787,14 +789,81 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
           .fx-progress-fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: var(--fx-text); height: 100%; transition: width 0.3s ease; }
           .fx-progress-numbers { position: absolute; inset: auto 0 100% 0; display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--fx-text); }
 
-          @media (max-width: 900px) {
-            .fx-content {
-              grid-template-columns: 1fr; row-gap: 3vh;
-              place-items: center;
+          /* Keep responsive scaling without changing layout */
+          @media (max-width: 1400px) {
+            .fx-item {
+              font-size: clamp(1.3rem, 2.2vw, 1.8rem);
             }
-            .fx-left, .fx-right, .fx-center { height: auto; }
-            .fx-left, .fx-right { justify-items: center; }
-            .fx-track { transform: none !important; }
+            .fx-featured-title {
+              font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+            }
+            .fx-header {
+              font-size: clamp(1.5rem, 3.5vw, 3rem);
+            }
+          }
+
+          @media (max-width: 1024px) {
+            .fx-item {
+              font-size: clamp(1.2rem, 2vw, 1.6rem);
+            }
+            .fx-featured-title {
+              font-size: clamp(1.4rem, 3.2vw, 2.3rem);
+            }
+            .fx-header {
+              font-size: clamp(1.4rem, 3.2vw, 2.5rem);
+            }
+          }
+
+          @media (max-width: 768px) {
+            .fx-item {
+              font-size: clamp(1.15rem, 1.8vw, 1.4rem);
+            }
+            .fx-featured-title {
+              font-size: clamp(1.35rem, 2.8vw, 2rem);
+            }
+            .fx-header {
+              font-size: clamp(1.35rem, 2.8vw, 2rem);
+              padding-top: 10vh;
+            }
+          }
+
+          @media (max-width: 640px) {
+            .fx-item {
+              font-size: clamp(1.1rem, 1.6vw, 1.2rem);
+            }
+            .fx-featured-title {
+              font-size: clamp(1.3rem, 2.4vw, 1.8rem);
+            }
+            .fx-header {
+              font-size: clamp(1.3rem, 2.4vw, 1.8rem);
+              padding-top: 12vh;
+            }
+            .fx-left-item.active, .fx-right-item.active {
+              padding-left: 12px;
+              padding-right: 12px;
+            }
+            .fx-left-item.active::before,
+            .fx-right-item.active::after {
+              width: 5px;
+              height: 5px;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .fx-item {
+              font-size: clamp(0.6rem, 1.4vw, 1.1rem);
+            }
+            .fx-featured-title {
+              font-size: clamp(0.7rem, 2.2vw, 1.6rem);
+            }
+            .fx-header {
+              font-size: clamp(0.7rem, 2.2vw, 1.6rem);
+              padding-top: 14vh;
+            }
+            .fx-grid-px {
+              padding-left: 0.75rem !important;
+              padding-right: 0.75rem !important;
+            }
           }
         `}</style>
       </div>
@@ -803,3 +872,4 @@ export const FullScreenScrollFX = forwardRef<HTMLDivElement, FullScreenFXProps>(
 );
 
 FullScreenScrollFX.displayName = "FullScreenScrollFX";
+

@@ -321,16 +321,16 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
 
       {showNavigation && !loading && (
         <>
-        <nav className="fixed top-4 left-0 right-0 z-40 flex items-center justify-between px-8">
-          <div className="flex flex-col items-start">
-            <img src="/logo.png" alt="Quantiva" className="h-12" />
-            <span className="coming-soon mt-1">Coming Soon</span>
+        <nav className="fixed top-2 sm:top-4 left-0 right-0 z-40 flex items-center justify-between px-3 sm:px-6 md:px-8 gap-2 sm:gap-4">
+          <div className="flex flex-col items-start gap-0.5 flex-shrink-0">
+            <img src="/logo.png" alt="Quantiva" className="h-8 sm:h-10 md:h-12 w-auto" />
+            <span className="coming-soon-nav text-[0.6rem] sm:text-[0.7rem] md:text-[0.8rem] leading-none">Coming Soon</span>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center flex-shrink-0">
             <div
-              className="relative rounded-full border-[0.35rem] border-[#262626] bg-[#141414] flex items-center overflow-hidden"
-              style={{ width: '240px', maxWidth: '28vw' }}
+              className="relative rounded-full border-[0.25rem] sm:border-[0.3rem] md:border-[0.35rem] border-[#262626] bg-[#141414] flex items-center overflow-hidden"
+              style={{ width: 'clamp(140px, 20vw, 240px)', maxWidth: '28vw' }}
               onClick={(e) => e.stopPropagation()}
             >
               <input
@@ -338,8 +338,8 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
                 value={navEmail}
                 onChange={(e) => setNavEmail(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNavSubmit(); } }}
-                placeholder="Enter your email"
-                className="w-full h-8 bg-transparent border-none outline-none text-white font-sans text-xs px-3 placeholder:text-gray-500 placeholder:font-medium"
+                placeholder="Enter email"
+                className="w-full h-6 sm:h-7 md:h-8 bg-transparent border-none outline-none text-white font-sans text-[0.85rem] sm:text-[0.9rem] md:text-xs px-2 sm:px-2.5 md:px-3 placeholder:text-gray-500 placeholder:font-medium"
                 disabled={navSubmitted}
                 autoComplete="email"
                 aria-label="Email"
