@@ -105,18 +105,37 @@ const DeepJudgeScroll = () => {
     const features = featureRefs.current;
     const featureBgs = featureBgRefs.current;
 
-    const featureStartPositions = [
-      { top: 25, left: 15 },
-      { top: 12.5, left: 50 },
-      { top: 22.5, left: 75 },
-      { top: 50, left: 20 },
-      { top: 75, left: 50 },
-      { top: 80, left: 75 },
-      { top: 80, left: 15 }, 
-      { top: 50, left: 85 }, 
-    ];
+    // Detect mobile device
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+    // Adjust animation settings based on device
+    const scrollEndMultiplier = isMobile ? 1.5 : 3; // Less scroll needed on mobile
     
-    const featureMergePosition = { top: 50, left: 54 };
+    const featureStartPositions = isMobile 
+      ? [
+          { top: 15, left: 50 },
+          { top: 25, left: 50 },
+          { top: 35, left: 50 },
+          { top: 45, left: 50 },
+          { top: 55, left: 50 },
+          { top: 65, left: 50 },
+          { top: 75, left: 50 },
+          { top: 85, left: 50 },
+        ]
+      : [
+          { top: 25, left: 15 },
+          { top: 12.5, left: 50 },
+          { top: 22.5, left: 75 },
+          { top: 50, left: 20 },
+          { top: 75, left: 50 },
+          { top: 80, left: 75 },
+          { top: 80, left: 15 }, 
+          { top: 50, left: 85 }, 
+        ];
+    
+    const featureMergePosition = isMobile 
+      ? { top: 50, left: 50 }  // Center for mobile
+      : { top: 50, left: 54 }; // Desktop position
 
     features.forEach((feature, index) => {
       if (feature) {
@@ -172,12 +191,12 @@ const DeepJudgeScroll = () => {
     const remInPixels = parseFloat(
       getComputedStyle(document.documentElement).fontSize
     );
-    const targetWidth = 3 * remInPixels;
-    const targetHeight = 3 * remInPixels;
+    const targetWidth = isMobile ? 2.5 * remInPixels : 3 * remInPixels;  // Slightly smaller on mobile
+    const targetHeight = isMobile ? 2.5 * remInPixels : 3 * remInPixels;
 
     const getSearchBarFinalWidth = () => {
       const width = window.innerWidth;
-      if (width < 768) return 20;        // Mobile
+      if (width < 768) return 18;        // Mobile - smaller
       if (width < 1024) return 24;       // Tablet
       if (width < 1440) return 26;       // Laptop
       return 36;                          // Desktop
@@ -195,10 +214,10 @@ const DeepJudgeScroll = () => {
     const scrollTrigger = ScrollTrigger.create({
       trigger: spotlightRef.current,
       start: 'top top',
-      end: `+=${window.innerHeight * 3}px`,
+      end: `+=${window.innerHeight * scrollEndMultiplier}px`,
       pin: true,
       pinSpacing: true,
-      scrub: 1,
+      scrub: isMobile ? 0.5 : 1,  // Faster animation on mobile (less scrub = faster)
       onUpdate: (self) => {
         const progress = self.progress;
 
