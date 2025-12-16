@@ -63,9 +63,6 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-gray-800/50 my-4 sm:my-6"></div>
-
         {/* Links Section - Horizontal Layout */}
         <div className="grid grid-cols-3 gap-4 sm:gap-8 md:gap-12 mb-4 sm:mb-6">
           {/* Product Links */}
