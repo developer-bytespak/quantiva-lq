@@ -26,6 +26,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
   const lenisRef = useRef<any>(null);
   const [navEmail, setNavEmail] = useState('');
   const [navSubmitted, setNavSubmitted] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const handleNavSubmit = () => {
     if (navEmail && navEmail.includes('@')) {
@@ -52,6 +53,17 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
       document.body.style.overflow = '';
     };
   }, [loading]);
+
+  // Add scroll listener to detect scrolling for mobile header background
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY > 10;
+      setIsScrolled(scrolled);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -321,7 +333,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
 
       {showNavigation && !loading && (
         <>
-        <nav className="fixed top-2 sm:top-4 left-0 right-0 z-40 flex items-center justify-between px-3 sm:px-6 md:px-8 gap-2 sm:gap-4">
+        <nav className={`fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-3 sm:px-6 md:px-8 gap-2 sm:gap-4 transition-all duration-300 md:bg-transparent bg-black py-2 sm:py-1.5 md:py-0 md:top-2 md:rounded-b-lg rounded-b-lg`}>
           <div className="flex flex-col items-start gap-0.5 flex-shrink-0">
             <img src="/logo.png" alt="Quantiva" className="h-8 sm:h-10 md:h-12 w-auto" />
             <span className="coming-soon-nav text-[0.6rem] sm:text-[0.7rem] md:text-[0.8rem] leading-none">Coming Soon</span>
