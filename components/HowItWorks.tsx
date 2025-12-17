@@ -198,7 +198,7 @@ const DeepJudgeScroll = () => {
       const width = window.innerWidth;
   if (width < 768) return 22;        // Mobile - smaller
   if (width < 1024) return 20;       // Tablet
-  if (width < 1440) return 18;       // Laptop
+  if (width < 1440) return 26;       // Laptop
   return 22;                         // Desktop
     };
 
