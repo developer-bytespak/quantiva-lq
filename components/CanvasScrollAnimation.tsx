@@ -21,6 +21,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
+  const [scrollHeight, setScrollHeight] = useState('400vh');
   const [loading, setLoading] = useState(true);
   const [loadedCount, setLoadedCount] = useState(0);
   const lenisRef = useRef<any>(null);
@@ -79,11 +80,18 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
 
     const setCanvasSize = () => {
       const dpr = Math.min(window.devicePixelRatio, 2);
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
+      // set logical canvas pixels according to device pixel ratio
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
-      context.scale(dpr, dpr);
+      // Use setTransform to avoid accumulating scale on repeated resizes
+      if (typeof (context as any).setTransform === 'function') {
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      } else {
+        // Fallback for older browsers
+        context.scale(dpr, dpr);
+      }
     };
     setCanvasSize();
 
@@ -163,30 +171,29 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
       }
 
       try {
-        const canvasWidth = canvas.width / (Math.min(window.devicePixelRatio, 2));
-        const canvasHeight = canvas.height / (Math.min(window.devicePixelRatio, 2));
-        const canvasRatio = canvasWidth / canvasHeight;
+        // Calculate canvas size in CSS pixels (account for devicePixelRatio)
+        const dpr = Math.min(window.devicePixelRatio, 2);
+        const canvasWidth = canvas.width / dpr;
+        const canvasHeight = canvas.height / dpr;
         const imgRatio = img.width / img.height;
 
-        let drawWidth, drawHeight, offsetX, offsetY;
+        // Small mobile zoom: scale slightly up on narrow viewports so content feels larger
+        const isMobile = window.innerWidth < 640;
+        const mobileZoom = 1.5; // tweak this value to increase/decrease zoom on mobile
+        const zoom = isMobile ? mobileZoom : 1;
 
-        if (canvasRatio > imgRatio) {
-          drawWidth = canvasWidth;
-          drawHeight = canvasWidth / imgRatio;
-          offsetX = 0;
-          offsetY = (canvasHeight - drawHeight) / 2;
-        } else {
-          drawHeight = canvasHeight;
-          drawWidth = canvasHeight * imgRatio;
-          offsetX = (canvasWidth - drawWidth) / 2;
-          offsetY = 0;
-        }
+        // Draw width uses zoom so image can be slightly larger than the viewport (cropping)
+        const drawWidth = canvasWidth * zoom;
+        const drawHeight = drawWidth / imgRatio;
+
+        // Center horizontally and vertically. When zoom > 1, offsetX will be negative to crop sides
+        const offsetX = (canvasWidth - drawWidth) / 2;
+        const offsetY = (canvasHeight - drawHeight) / 2;
 
         context.clearRect(0, 0, canvasWidth, canvasHeight);
         context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
       } catch (error) {
         console.error('Error drawing frame:', error);
-        // Don't throw, just skip this frame
       }
     };
 
@@ -291,6 +298,14 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
         setCanvasSize();
         drawFrame(frameData.frame);
         ScrollTrigger.refresh();
+        // adjust container scroll height for smaller screens
+        if (window.innerWidth < 640) {
+          setScrollHeight('260vh');
+        } else if (window.innerWidth < 1024) {
+          setScrollHeight('360vh');
+        } else {
+          setScrollHeight('400vh');
+        }
       }, 250);
     };
 
@@ -333,7 +348,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
 
       {showNavigation && !loading && (
         <>
-        <nav className={`fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-3 sm:px-6 md:px-8 gap-2 sm:gap-4 transition-all duration-300 md:bg-transparent bg-black py-2 sm:py-1.5 md:py-0 md:top-2 md:rounded-b-lg rounded-b-lg`}>
+  <nav className={`fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-3 sm:px-6 md:px-8 gap-2 sm:gap-4 transition-all duration-300 bg-transparent py-2 sm:py-1.5 md:py-0 md:top-2 md:rounded-b-lg rounded-b-lg`}>
           <div className="flex flex-col items-start gap-0.5 flex-shrink-0">
             <img src="/logo.png" alt="Quantiva" className="h-8 sm:h-10 md:h-12 w-auto" />
             <span className="coming-soon-nav text-[0.6rem] sm:text-[0.7rem] md:text-[0.8rem] leading-none">Coming Soon</span>
@@ -409,7 +424,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
       <div
         ref={containerRef}
         className="relative w-full"
-        style={{ height: '400vh' }}
+        style={{ height: scrollHeight }}
       >
         <div className="sticky top-0 left-0 w-full h-screen overflow-hidden">
           <canvas ref={canvasRef} className="w-full h-full bg-black" />
@@ -419,7 +434,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
           >
             <div className="text-center text-white px-4 max-w-4xl">
-              <h1 className="text-6xl md:text-6xl font-bold mb-6 tracking-wider">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-6 tracking-wider">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r text-white">
                   WITNESS TRADING REIMAGINED
                 </span>
@@ -430,10 +445,10 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
           {/* Scroll indicator with glassmorphism */}
           <div 
             ref={scrollIndicatorRef}
-            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-none"
+            className="absolute bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-none"
           >
             <div 
-              className="px-6 py-3 rounded-2xl"
+              className="px-4 sm:px-6 py-2 sm:py-3 rounded-2xl"
               style={{
                 background: 'rgba(239, 130, 22, 0.23137254901960785)',
                 borderRadius: '16px',
@@ -442,7 +457,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
                 WebkitBackdropFilter: 'blur(3.2px)'
               }}
             >
-              <p className="text-white text-md font-light tracking-wider">
+              <p className="text-white text-sm sm:text-md font-light tracking-wider">
                 Scroll to begin the journey
               </p>
             </div>

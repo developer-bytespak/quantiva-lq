@@ -66,8 +66,8 @@ export default function Features() {
 			sections={sections}
 			header={
 				<>
-					<div className="text-sm sm:text-lg md:text-3xl lg:text-[3.5rem] leading-wide tracking-wider">POWERFUL FEATURES FOR</div>
-					<div className="text-base sm:text-2xl md:text-5xl lg:text-[5.5rem] font-extrabold bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent [-webkit-text-fill-color:transparent] [-webkit-background-clip:text] leading-wide tracking-wider">MODERN TRADERS</div>
+					<div className="text-lg sm:text-2xl md:text-4xl lg:text-[3.5rem] leading-wide tracking-wider">POWERFUL FEATURES FOR</div>
+					<div className="text-2xl sm:text-4xl md:text-6xl lg:text-[5.5rem] font-extrabold bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent [-webkit-text-fill-color:transparent] [-webkit-background-clip:text] leading-wide tracking-wider">MODERN TRADERS</div>
 				</>
 			}
 			footer={<div></div>}
