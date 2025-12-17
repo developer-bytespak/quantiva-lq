@@ -113,14 +113,14 @@ const DeepJudgeScroll = () => {
     
     const featureStartPositions = isMobile 
       ? [
-          { top: 15, left: 50 },
-          { top: 25, left: 50 },
-          { top: 35, left: 50 },
-          { top: 45, left: 50 },
-          { top: 55, left: 50 },
-          { top: 65, left: 50 },
-          { top: 75, left: 50 },
-          { top: 85, left: 50 },
+          { top: 5, left: 50 },    //sign up
+          { top: 17.5, left: 75 }, //market sentiment
+          { top: 17.5, left: 25 }, //AI trading
+          { top: 30, left: 50 },   //receive trades
+          { top: 65, left: 50 },   //approve and execute trade
+          { top: 90, left: 50 },   //optimize portfolio
+          { top: 77.5, left: 73 }, //monitor performance
+          { top: 77.5, left: 23 }, //AI voice assistant
         ]
       : [
           { top: 25, left: 15 },
@@ -134,8 +134,8 @@ const DeepJudgeScroll = () => {
         ];
     
     const featureMergePosition = isMobile 
-      ? { top: 50, left: 50 }  // Center for mobile
-      : { top: 50, left: 54 }; // Desktop position
+      ? { top: 50, left: 69 }  // Center for mobile
+      : { top: 50, left: 57 }; // Desktop position
 
     features.forEach((feature, index) => {
       if (feature) {
@@ -196,10 +196,10 @@ const DeepJudgeScroll = () => {
 
     const getSearchBarFinalWidth = () => {
       const width = window.innerWidth;
-      if (width < 768) return 18;        // Mobile - smaller
-      if (width < 1024) return 24;       // Tablet
-      if (width < 1440) return 26;       // Laptop
-      return 36;                          // Desktop
+  if (width < 768) return 22;        // Mobile - smaller
+  if (width < 1024) return 20;       // Tablet
+  if (width < 1440) return 18;       // Laptop
+  return 22;                         // Desktop
     };
 
     let searchBarFinalWidth = getSearchBarFinalWidth();
@@ -232,8 +232,10 @@ const DeepJudgeScroll = () => {
           });
         }
 
-        if (progress >= 0 && progress <= 0.5) {
-          const featureProgress = progress / 0.5;
+
+        // Features merge and fade out: 0 - 0.7
+        if (progress >= 0 && progress <= 0.7) {
+          const featureProgress = progress / 0.7;
 
           features.forEach((feature, index) => {
             if (feature) {
@@ -255,7 +257,6 @@ const DeepJudgeScroll = () => {
           featureBgs.forEach((bg, index) => {
             if (bg && featureStartDimensions[index]) {
               const featureDim = featureStartDimensions[index];
-              
               // Allow boxes to shrink from natural size to target size during transition
               const currentWidth = featureDim.width + (targetWidth - featureDim.width) * featureProgress;
               const currentHeight = featureDim.height + (targetHeight - featureDim.height) * featureProgress;
@@ -271,6 +272,7 @@ const DeepJudgeScroll = () => {
             }
           });
 
+          // Fade out feature text in first 10% of scroll
           if (progress >= 0 && progress <= 0.1) {
             const featureTextProgress = progress / 0.1;
             featureContentRefs.current.forEach((content) => {
@@ -291,7 +293,8 @@ const DeepJudgeScroll = () => {
           }
         }
 
-        if (progress >= 0.5) {
+        // Hide features after 0.7
+        if (progress >= 0.7) {
           gsap.set(featuresRef.current, {
             opacity: 0,
           });
@@ -301,7 +304,8 @@ const DeepJudgeScroll = () => {
           });
         }
 
-        if (progress >= 0.5) {
+        // Email input bar appears after features are gone (0.7 - 0.9)
+        if (progress >= 0.7) {
           gsap.set(searchBarRef.current, {
             opacity: 1,
           });
@@ -311,11 +315,11 @@ const DeepJudgeScroll = () => {
           });
         }
 
-        if (progress >= 0.5 && progress <= 0.75) {
-          const searchBarProgress = (progress - 0.5) / 0.25;
+        if (progress >= 0.7 && progress <= 0.9) {
+          const searchBarProgress = (progress - 0.7) / 0.2;
 
-          const width = 3 + (searchBarFinalWidth - 3) * searchBarProgress;
-          const height = 3 + (5 - 3) * searchBarProgress;
+          const width = 2.2 + (searchBarFinalWidth - 2.2) * searchBarProgress;
+          const height = 2.2 + (3.5 - 2.2) * searchBarProgress;
 
           const translateY = -50 + (200 - -50) * searchBarProgress;
 
@@ -325,7 +329,6 @@ const DeepJudgeScroll = () => {
               height: `${height}rem`,
               transform: `translate(-50%, ${translateY}%)`,
             });
-            
             // Hide input content during animation
             const inputElement = searchBarRef.current.querySelector('input');
             const buttonElement = searchBarRef.current.querySelector('button');
@@ -336,14 +339,13 @@ const DeepJudgeScroll = () => {
               gsap.set(buttonElement, { opacity: 0 });
             }
           }
-        } else if (progress > 0.75) {
+        } else if (progress > 0.9) {
           if (searchBarRef.current) {
             gsap.set(searchBarRef.current, {
               width: `${searchBarFinalWidth}rem`,
-              height: '5rem',
+              height: '3.5rem',
               transform: `translate(-50%, 200%)`,
             });
-            
             // Show input content after animation completes
             const inputElement = searchBarRef.current.querySelector('input');
             const buttonElement = searchBarRef.current.querySelector('button');
@@ -429,7 +431,7 @@ const DeepJudgeScroll = () => {
             </svg>
           </div>
           <div className="text-center w-full md:w-2/5 px-8 flex flex-col items-center gap-4">
-            <h1 className="text-2xl md:text-[4.5rem] bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent font-medium leading-[0.9] tracking-wider">
+            <h1 className="text-4xl md:text-[4.5rem] lg:text-[4.5rem] bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent font-medium leading-[0.9] tracking-wider">
               From Sign-Up to<br />Smart Trades
             </h1>
             <p className="font-sans text-base md:text-lg font-normal leading-relaxed text-gray-300">
@@ -445,12 +447,19 @@ const DeepJudgeScroll = () => {
             className="w-full md:w-3/5 flex flex-col items-center text-center gap-8 px-8 opacity-0"
             style={{ transform: 'translateY(-100px)' }}
           >
-            <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-medium bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent leading-[1.1] tracking-wider">
+            <h1 className="text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-medium bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent leading-[1.1] tracking-wider">
               Join us in shaping the future of Intelligent Trading
             </h1>
             <p className="font-sans text-base md:text-lg font-normal leading-relaxed text-gray-300">
               We're building something revolutionary that will transform how you trade. Join our community of forward-thinking traders and be among the first to experience the next evolution in AI-powered investment strategies.
             </p>
+            {/* Add bottom padding for mobile only */}
+            <style jsx>{`
+              @media (max-width: 767px) {
+                .howitworks-mobile-pb { padding-bottom: 8rem; }
+              }
+            `}</style>
+            <span className="howitworks-mobile-pb block md:hidden" />
           </div>
         </div>
 
