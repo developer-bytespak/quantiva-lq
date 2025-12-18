@@ -28,6 +28,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
   const [navEmail, setNavEmail] = useState('');
   const [navSubmitted, setNavSubmitted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const handleNavSubmit = () => {
     if (navEmail && navEmail.includes('@')) {
@@ -43,25 +44,41 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
   };
 
   useEffect(() => {
-    // Disable scrolling when loading
+    // Only restrict scroll during loading, ensure it's properly reset
     if (loading) {
+      const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      
+      return () => {
+        // Restore original overflow state on cleanup
+        document.body.style.overflow = originalOverflow;
+      };
     } else {
+      // Ensure overflow is cleared after loading
       document.body.style.overflow = '';
     }
-
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [loading]);
 
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Add scroll listener to detect scrolling for mobile header background
+  // Using passive listener to avoid interfering with scroll performance
   useEffect(() => {
     const handleScroll = () => {
       const scrolled = window.scrollY > 10;
       setIsScrolled(scrolled);
     };
 
+    // Use passive event listener to ensure it doesn't block page scroll
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -79,13 +96,16 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
     if (!context) return;
 
     const setCanvasSize = () => {
+      // Strictly isolated to canvas element - no layout modifications
       const dpr = Math.min(window.devicePixelRatio, 2);
-      // set logical canvas pixels according to device pixel ratio
+      // Set logical canvas pixels according to device pixel ratio
       canvas.width = Math.floor(window.innerWidth * dpr);
       canvas.height = Math.floor(window.innerHeight * dpr);
+      // Set canvas CSS size without affecting page layout
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
       // Use setTransform to avoid accumulating scale on repeated resizes
+      // This prevents any unintended layout shifts
       if (typeof (context as any).setTransform === 'function') {
         context.setTransform(dpr, 0, 0, dpr, 0, 0);
       } else {
@@ -96,8 +116,11 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
     setCanvasSize();
 
     const images: HTMLImageElement[] = [];
-    const frameData = { frame: 0 };
+    const frameData = { frame: 0, scrollProgress: 0 };
     let loadedImages = 0;
+
+    // Detect if mobile at this point
+    const isMobileDevice = window.innerWidth < 768;
 
     // Fetch blob URLs from API
     const fetchBlobUrls = async () => {
@@ -177,21 +200,45 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
         const canvasHeight = canvas.height / dpr;
         const imgRatio = img.width / img.height;
 
-        // Small mobile zoom: scale slightly up on narrow viewports so content feels larger
-        const isMobile = window.innerWidth < 640;
-        const mobileZoom = 1.5; // tweak this value to increase/decrease zoom on mobile
-        const zoom = isMobile ? mobileZoom : 1;
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
 
-        // Draw width uses zoom so image can be slightly larger than the viewport (cropping)
-        const drawWidth = canvasWidth * zoom;
-        const drawHeight = drawWidth / imgRatio;
+        // LAPTOP: Video width fills the screen (attached to sides)
+        if (!isMobileDevice) {
+          // Fit width to screen - maintain aspect ratio
+          const drawWidth = canvasWidth;
+          const drawHeight = drawWidth / imgRatio;
+          const offsetX = 0;
+          const offsetY = (canvasHeight - drawHeight) / 2;
+          context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+          return;
+        }
 
-        // Center horizontally and vertically. When zoom > 1, offsetX will be negative to crop sides
+        // MOBILE: Apply contained zoom effect based on scroll progress
+        // Zoom only affects the visual rendering, not the layout
+        let scale = 1;
+        if (frameData.scrollProgress >= 0.5) {
+          // Map 0.5-1.0 progress to 1.0-0.5 scale (zoom out effect)
+          const zoomProgress = (frameData.scrollProgress - 0.5) * 2;
+          scale = 1 - (zoomProgress * 0.5); // Zooms from 1.0 to 0.5
+        }
+
+        // Fit height to screen - maintain aspect ratio
+        const drawHeight = canvasHeight;
+        const drawWidth = drawHeight * imgRatio;
+
+        // Center the image on canvas
         const offsetX = (canvasWidth - drawWidth) / 2;
         const offsetY = (canvasHeight - drawHeight) / 2;
 
-        context.clearRect(0, 0, canvasWidth, canvasHeight);
+        // Apply transform for scaling around center
+        // This ensures zoom stays centered and only affects the visual layer
+        context.save();
+        context.translate(canvasWidth / 2, canvasHeight / 2);
+        context.scale(scale, scale);
+        context.translate(-canvasWidth / 2, -canvasHeight / 2);
+        
         context.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+        context.restore();
       } catch (error) {
         console.error('Error drawing frame:', error);
       }
@@ -201,6 +248,8 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
       if (useSmoothScroll && typeof window !== 'undefined') {
         try {
           const Lenis = (await import('@studio-freight/lenis')).default;
+          
+          // Configure Lenis with options that won't affect other page components
           const lenisOptions: any = {
             duration: 1.8,
             easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -210,26 +259,36 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
             wheelMultiplier: 0.7,
             touchMultiplier: 1.5,
             infinite: false,
+            // Ensure Lenis targets the document for global scroll
+            // but respects the container hierarchy
+            target: window,
           };
 
           const lenis = new Lenis(lenisOptions);
           lenisRef.current = lenis;
 
+          // Request animation frame loop for Lenis
           const raf = (time: number) => {
             lenis.raf(time);
             requestAnimationFrame(raf);
           };
           requestAnimationFrame(raf);
 
+          // Sync Lenis scroll with ScrollTrigger
           lenis.on('scroll', ScrollTrigger.update);
 
+          // Also integrate Lenis with GSAP ticker for consistent animation timing
           gsap.ticker.add((time) => {
             lenis.raf(time * 1000);
           });
 
+          // Disable lag smoothing to prevent timing issues with other animations
           gsap.ticker.lagSmoothing(0);
+          
+          console.log('Lenis smooth scroll initialized for CanvasScrollAnimation');
         } catch (error) {
-          console.warn('Lenis not installed, using native scroll');
+          console.warn('Lenis not installed, using native scroll:', error);
+          // Fall back to native scroll without affecting other components
         }
       }
     };
@@ -239,7 +298,8 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
     const setupAnimation = () => {
       drawFrame(0);
 
-      // Single ScrollTrigger that handles everything - no pinning
+      // Single ScrollTrigger that handles everything - scoped to container only
+      // Ensure it doesn't affect the entire page
       gsap.to(frameData, {
         frame: frameCount - 1,
         ease: 'none',
@@ -248,8 +308,13 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
           start: 'top top',
           end: 'bottom bottom',
           scrub: 3,
+          markers: false, // Disable debug markers in production
           onUpdate: (self) => {
             const progress = self.progress;
+            // Only track scroll progress on mobile
+            if (isMobileDevice) {
+              frameData.scrollProgress = progress;
+            }
             const targetFrame = progress * (frameCount - 1);
             frameData.frame = targetFrame;
             drawFrame(targetFrame);
@@ -258,6 +323,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
       });
 
       // Fade out overlay at frames 100-115
+      // Scoped to container to ensure it doesn't affect other page elements
       if (overlayRef.current) {
         const fadeStartProgress = 100 / frameCount;
         const fadeEndProgress = 115 / frameCount;
@@ -270,11 +336,13 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
             start: `${fadeStartProgress * 100}% top`,
             end: `${fadeEndProgress * 100}% top`,
             scrub: 2,
+            markers: false,
           },
         });
       }
 
       // Fade out scroll indicator on scroll
+      // Scoped to container to ensure it doesn't affect other page elements
       if (scrollIndicatorRef.current) {
         gsap.to(scrollIndicatorRef.current, {
           opacity: 0,
@@ -284,6 +352,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
             start: 'top top',
             end: 'top+=100 top',
             scrub: 1.5,
+            markers: false,
           },
         });
       }
@@ -312,15 +381,32 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
     window.addEventListener('resize', handleResize);
 
     return () => {
+      // Comprehensive cleanup to ensure no interference with other components
       window.removeEventListener('resize', handleResize);
       clearTimeout(resizeTimeout);
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
       
+      // Kill all ScrollTrigger instances created by this component
+      // This prevents any lingering scroll handlers from affecting other components
+      ScrollTrigger.getAll().forEach((trigger) => {
+        if (trigger.vars?.trigger === container) {
+          trigger.kill();
+        }
+      });
+      
+      // Properly destroy Lenis instance to prevent global scroll conflicts
       if (lenisRef.current) {
-        lenisRef.current.destroy();
+        try {
+          lenisRef.current.destroy();
+          lenisRef.current = null;
+        } catch (error) {
+          console.warn('Error destroying Lenis:', error);
+        }
       }
+      
+      // Reset any overflow styles that might have been applied
+      document.body.style.overflow = '';
     };
-  }, [frameCount, useSmoothScroll]);
+  }, [frameCount, useSmoothScroll, isMobile]);
 
   return (
     <>
