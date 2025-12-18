@@ -341,10 +341,11 @@ const DeepJudgeScroll = () => {
           }
         } else if (progress > 0.9) {
           if (searchBarRef.current) {
+            const finalTranslateY = isMobile ? 200 : 200;
             gsap.set(searchBarRef.current, {
               width: `${searchBarFinalWidth}rem`,
               height: '3.5rem',
-              transform: `translate(-50%, 200%)`,
+              transform: `translate(-50%, ${finalTranslateY}%)`,
             });
             // Show input content after animation completes
             const inputElement = searchBarRef.current.querySelector('input');
@@ -443,11 +444,12 @@ const DeepJudgeScroll = () => {
         {/* Header */}
         <div className="absolute w-full h-full flex justify-center items-center z-40">
           <div
+            id="header-content-ref"
             ref={headerContentRef}
             className="w-full md:w-3/5 flex flex-col items-center text-center gap-8 px-8 opacity-0"
             style={{ transform: 'translateY(-100px)' }}
           >
-            <h1 className="text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-medium bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent leading-[1.1] tracking-wider">
+            <h1 className="text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-medium bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent leading-[1.1] tracking-wider mb-8 md:mb-0">
               Join us in shaping the future of Intelligent Trading
             </h1>
             <p className="font-sans text-base md:text-lg font-normal leading-relaxed text-gray-300">
@@ -457,6 +459,11 @@ const DeepJudgeScroll = () => {
             <style jsx>{`
               @media (max-width: 767px) {
                 .howitworks-mobile-pb { padding-bottom: 8rem; }
+              }
+              @media (min-width: 1024px) {
+                #header-content-ref {
+                  transform: translateY(-80px) !important;
+                }
               }
             `}</style>
             <span className="howitworks-mobile-pb block md:hidden" />

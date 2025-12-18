@@ -13,7 +13,7 @@ interface CanvasScrollAnimationProps {
 }
 
 const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
-  frameCount = 359,
+  frameCount = 182,
   showNavigation = true,
   useSmoothScroll = true,
 }) => {
@@ -125,7 +125,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
     // Fetch blob URLs from API
     const fetchBlobUrls = async () => {
       try {
-        const response = await fetch('/api/frames');
+        const response = await fetch('/api/frames2');
         if (!response.ok) {
           throw new Error('Failed to fetch blob URLs');
         }
@@ -135,7 +135,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
         console.error('Error fetching blob URLs:', error);
         // Fallback to local paths if blob fetch fails
         return Array.from({ length: frameCount }, (_, i) => 
-          `/Frames/frame_${(i + 1).toString().padStart(4, '0')}.png`
+          `/frames2/frame_${(i + 1).toString().padStart(4, '0')}.png`
         );
       }
     };

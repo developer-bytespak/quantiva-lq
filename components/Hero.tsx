@@ -5,7 +5,7 @@ const Hero: React.FC = () => {
   return (
     <section className="relative">
       <CanvasScrollAnimation 
-        frameCount={359}
+        frameCount={182}
         useSmoothScroll={true}
         showNavigation={true}
       />
