@@ -216,9 +216,9 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
         // MOBILE: Apply contained zoom effect based on scroll progress
         // Zoom only affects the visual rendering, not the layout
         let scale = 1;
-        if (frameData.scrollProgress >= 0.5) {
-          // Map 0.5-1.0 progress to 1.0-0.5 scale (zoom out effect)
-          const zoomProgress = (frameData.scrollProgress - 0.5) * 2;
+        if (frameData.scrollProgress >= 0.75) {
+          // Map 0.75-1.0 progress to 1.0-0.5 scale (zoom out effect)
+          const zoomProgress = (frameData.scrollProgress - 0.75) * 4;
           scale = 1 - (zoomProgress * 0.5); // Zooms from 1.0 to 0.5
         }
 
@@ -307,7 +307,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
           trigger: container,
           start: 'top top',
           end: 'bottom bottom',
-          scrub: 3,
+          scrub: 5,
           markers: false, // Disable debug markers in production
           onUpdate: (self) => {
             const progress = self.progress;
@@ -322,11 +322,11 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
         },
       });
 
-      // Fade out overlay at frames 100-115
+      // Fade out overlay at frames 50-75 (faster fade out)
       // Scoped to container to ensure it doesn't affect other page elements
       if (overlayRef.current) {
-        const fadeStartProgress = 100 / frameCount;
-        const fadeEndProgress = 115 / frameCount;
+        const fadeStartProgress = 30 / frameCount;
+        const fadeEndProgress = 45 / frameCount;
 
         gsap.to(overlayRef.current, {
           opacity: 0,
@@ -335,7 +335,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
             trigger: container,
             start: `${fadeStartProgress * 100}% top`,
             end: `${fadeEndProgress * 100}% top`,
-            scrub: 2,
+            scrub: 3.5,
             markers: false,
           },
         });
