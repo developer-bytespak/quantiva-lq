@@ -122,7 +122,7 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
     // Detect if mobile at this point
     const isMobileDevice = window.innerWidth < 768;
 
-    // Fetch blob URLs from API
+    // Fetch blob URLs from API (returns optimized .webp paths)
     const fetchBlobUrls = async () => {
       try {
         const response = await fetch('/api/frames2');
@@ -133,9 +133,9 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
         return data.urls as string[];
       } catch (error) {
         console.error('Error fetching blob URLs:', error);
-        // Fallback to local paths if blob fetch fails
+        // Fallback to local .webp paths if blob fetch fails
         return Array.from({ length: frameCount }, (_, i) => 
-          `/frames2/frame_${(i + 1).toString().padStart(4, '0')}.png`
+          `/frames2/frame_${(i + 1).toString().padStart(4, '0')}.webp`
         );
       }
     };
