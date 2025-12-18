@@ -2,6 +2,8 @@
 
 import React from 'react'
 
+
+
 const Footer: React.FC = () => {
   return (
     <footer id="footer" className="relative text-gray-300 overflow-hidden">
@@ -13,18 +15,18 @@ const Footer: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-blue-900/10" />
       </div>
 
-      <div className="container mx-auto px-4 pt-24 pb-12 relative z-10 tracking-wider">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[40%_20%_20%_20%] gap-8 mb-8 text-center md:text-left place-items-center md:place-items-start">
+      <div className="container mx-auto px-4 pt-12 pb-8 sm:pt-16 sm:pb-10 md:pt-24 md:pb-12 relative z-10 tracking-wider">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[40%_20%_20%_20%] gap-6 md:gap-8 mb-6 md:mb-8 text-center md:text-left place-items-center md:place-items-start">
           {/* Company Info */}
           <div className="flex flex-col items-center md:items-start">
-            <img src="/logo.png" alt="Quantiva HQ" className="h-12 mb-4 mx-auto md:mx-0" />
-            <p className="mb-4 text-gray-400 max-w-xs text-center md:text-left">
+            <img src="/logo.png" alt="Quantiva HQ" className="h-10 sm:h-11 md:h-12 mb-3 mx-auto md:mx-0" loading="lazy" />
+            <p className="mb-3 sm:mb-4 text-gray-400 max-w-xs text-center md:text-left text-sm sm:text-base">
               Your gateway to advanced trading solutions and financial excellence. Experience the next evolution in AI-powered investment strategies.
             </p>
-            <div className="flex gap-3 justify-center md:justify-start">
+            <div className="flex gap-2 sm:gap-3 justify-center md:justify-start">
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800/50 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors border border-gray-700/50"
+                className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-800/50 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors border border-gray-700/50"
                 aria-label="Twitter"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -33,7 +35,7 @@ const Footer: React.FC = () => {
               </a>
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800/50 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors border border-gray-700/50"
+                className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-800/50 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors border border-gray-700/50"
                 aria-label="LinkedIn"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -43,7 +45,7 @@ const Footer: React.FC = () => {
               </a>
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800/50 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors border border-gray-700/50"
+                className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-800/50 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors border border-gray-700/50"
                 aria-label="GitHub"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -52,7 +54,7 @@ const Footer: React.FC = () => {
               </a>
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800/50 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors border border-gray-700/50"
+                className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-800/50 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors border border-gray-700/50"
                 aria-label="Discord"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -64,8 +66,8 @@ const Footer: React.FC = () => {
 
           {/* Quick Links */}
           <div className="flex flex-col items-center md:items-start">
-            <h4 className="text-white text-lg font-semibold mb-4 text-center md:text-left">Quick Links</h4>
-            <ul className="space-y-2 text-center md:text-left">
+            <h4 className="text-white text-lg font-semibold mb-3 md:mb-4 text-center md:text-left">Quick Links</h4>
+            <ul className="space-y-1 md:space-y-2 text-center md:text-left">
               <li>
                 <a href="#hero" className="hover:text-white transition-colors text-gray-400">
                   Home
@@ -91,8 +93,8 @@ const Footer: React.FC = () => {
 
           {/* Legal */}
           <div className="flex flex-col items-center md:items-start">
-            <h4 className="text-white text-lg font-semibold mb-4 text-center md:text-left">Legal</h4>
-            <ul className="space-y-2 text-center md:text-left">
+            <h4 className="text-white text-lg font-semibold mb-3 md:mb-4 text-center md:text-left">Legal</h4>
+            <ul className="space-y-1 md:space-y-2 text-center md:text-left">
               <li>
                 <a href="#" className="hover:text-white transition-colors text-gray-400">
                   Privacy Policy
@@ -118,8 +120,8 @@ const Footer: React.FC = () => {
 
           {/* Resources */}
           <div className="flex flex-col items-center md:items-start">
-            <h4 className="text-white text-lg font-semibold mb-4 text-center md:text-left">Resources</h4>
-            <ul className="space-y-2 text-center md:text-left">
+            <h4 className="text-white text-lg font-semibold mb-3 md:mb-4 text-center md:text-left">Resources</h4>
+            <ul className="space-y-1 md:space-y-2 text-center md:text-left">
               <li>
                 <a href="#" className="hover:text-white transition-colors text-gray-400">
                   Documentation
@@ -145,9 +147,9 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-800 pt-8">
+        <div className="border-t border-gray-800 pt-6 md:pt-8">
           <div className="flex justify-center items-center text-center">
-            <p className="text-lg text-gray-400 tracking-wider w-full">
+            <p className="text-sm md:text-lg text-gray-400 tracking-wider w-full">
               Designed and developed by Bytes Platform Inc.
             </p>
           </div>

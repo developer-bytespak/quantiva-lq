@@ -434,16 +434,16 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
 
       {showNavigation && !loading && (
         <>
-  <nav className={`fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-3 sm:px-6 md:px-8 gap-2 sm:gap-4 transition-all duration-300 bg-transparent py-2 sm:py-1.5 md:py-0 md:top-2 md:rounded-b-lg rounded-b-lg`}>
-          <div className="flex flex-col items-start gap-0.5 flex-shrink-0">
-            <img src="/logo.png" alt="Quantiva" className="h-8 sm:h-10 md:h-12 w-auto" />
-            <span className="coming-soon-nav text-[0.6rem] sm:text-[0.7rem] md:text-[0.8rem] leading-none">Coming Soon</span>
+        <nav className="fixed top-4 left-0 right-0 z-40 flex items-center justify-between px-8">
+          <div className="flex flex-col items-start">
+            <img src="/logo.png" alt="Quantiva" className="h-8 md:h-12" />
+            <span className="coming-soon mt-1">Coming Soon</span>
           </div>
 
-          <div className="flex items-center flex-shrink-0">
+          <div className="flex items-center">
             <div
-              className="relative rounded-full border-[0.25rem] sm:border-[0.3rem] md:border-[0.35rem] border-[#262626] bg-[#141414] flex items-center overflow-hidden"
-              style={{ width: 'clamp(140px, 20vw, 240px)', maxWidth: '28vw' }}
+              className="relative rounded-full border-[0.35rem] border-[#262626] bg-[#141414] flex items-center overflow-hidden"
+              style={{ width: '240px', maxWidth: '28vw' }}
               onClick={(e) => e.stopPropagation()}
             >
               <input
@@ -451,8 +451,8 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
                 value={navEmail}
                 onChange={(e) => setNavEmail(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNavSubmit(); } }}
-                placeholder="Enter email"
-                className="w-full h-6 sm:h-7 md:h-8 bg-transparent border-none outline-none text-white font-sans text-[0.85rem] sm:text-[0.9rem] md:text-xs px-2 sm:px-2.5 md:px-3 placeholder:text-gray-500 placeholder:font-medium"
+                placeholder={isMobile ? "Email" : "Enter your email"}
+                className="w-full h-8 md:h-4 bg-transparent border-none outline-none text-white font-sans text-[15px] md:text-xs px-5 md:px-3 placeholder:text-gray-500 placeholder:font-medium"
                 disabled={navSubmitted}
                 autoComplete="email"
                 aria-label="Email"
@@ -497,7 +497,15 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
             text-shadow: 0 10px 30px rgba(248,108,36,0.22), 0 0 14px rgba(255,255,255,0.12);
             transform-origin: left center;
           }
-
+          //adding media code for mobile to reduce size of coming soon
+          @media (max-width: 640px) {
+            .coming-soon {
+              font-size: 0.6rem;
+              letter-spacing: 0.4em;
+              padding-left: 0.4em;
+              margin-top: -0.4rem;
+            }
+          }
           @keyframes comingGradient {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
