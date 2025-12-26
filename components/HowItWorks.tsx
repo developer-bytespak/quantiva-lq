@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -10,25 +11,63 @@ const DeepJudgeScroll = () => {
   const headerContentRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const anchorRef = useRef<HTMLDivElement | null>(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const portalContainerRef = useRef<HTMLDivElement | null>(null);
+  const [portalReady, setPortalReady] = useState(false);
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+  const [submitError, setSubmitError] = useState(false);
+  const [animationComplete, setAnimationComplete] = useState(false);
   const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
   const featureBgRefs = useRef<(HTMLDivElement | null)[]>([]);
   const featureContentRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const handleSubmit = () => {
-    if (email && email.includes('@')) {
-      setIsSubmitted(true);
-      console.log('Email submitted:', email);
-      // TODO: Add your email submission logic here (API call, etc.)
+  const handleSubmit = async () => {
+    if (!email || !email.includes('@')) {
+      setSubmitError(true);
+      setSubmitMessage('Please enter a valid email');
+      return;
+    }
+    if (isSubmitted) return;
+
+    setIsSubmitted(true);
+    setSubmitError(false);
+    setSubmitMessage('');
+
+    try {
+      const res = await fetch('/api/submit-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        console.error('Proxy error:', data);
+        setSubmitError(true);
+        setSubmitMessage(data?.error || data?.upstream || 'Submission failed');
+        setTimeout(() => setIsSubmitted(false), 3000);
+        return;
+      }
+
+      setSubmitMessage(data?.upstream || '✓ Successfully joined!');
+      setEmail('');
       setTimeout(() => {
-        setEmail('');
         setIsSubmitted(false);
+        setSubmitMessage('');
       }, 3000);
+    } catch (err) {
+      console.error('Error submitting email:', err);
+      setSubmitError(true);
+      setSubmitMessage('Connection error. Please try again.');
+      setTimeout(() => setIsSubmitted(false), 3000);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSubmit();
     }
@@ -83,6 +122,13 @@ const DeepJudgeScroll = () => {
             radial-gradient(1px 1px at 70% 30%, white, transparent);
           background-size: 100% 100%;
           animation: twinkle 8s ease-in-out infinite;
+        }
+        
+        .search-bar-fixed {
+          position: fixed !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) !important;
         }
       `;
       document.head.appendChild(style);
@@ -196,10 +242,10 @@ const DeepJudgeScroll = () => {
 
     const getSearchBarFinalWidth = () => {
       const width = window.innerWidth;
-  if (width < 768) return 22;        // Mobile - smaller
-  if (width < 1024) return 20;       // Tablet
-  if (width < 1440) return 26;       // Laptop
-  return 22;                         // Desktop
+      if (width < 768) return 22;        // Mobile - smaller
+      if (width < 1024) return 20;       // Tablet
+      if (width < 1440) return 26;       // Laptop
+      return 22;                         // Desktop
     };
 
     let searchBarFinalWidth = getSearchBarFinalWidth();
@@ -220,6 +266,13 @@ const DeepJudgeScroll = () => {
       scrub: isMobile ? 0.5 : 1,  // Faster animation on mobile (less scrub = faster)
       onUpdate: (self) => {
         const progress = self.progress;
+
+        // Check if animation is complete
+        if (progress >= 1) {
+          setAnimationComplete(true);
+        } else {
+          setAnimationComplete(false);
+        }
 
         if (progress <= 0.3333) {
           const spotlightHeaderProgress = progress / 0.3333;
@@ -305,56 +358,70 @@ const DeepJudgeScroll = () => {
         }
 
         // Email input bar appears after features are gone (0.7 - 0.9)
-        if (progress >= 0.7) {
-          gsap.set(searchBarRef.current, {
-            opacity: 1,
-          });
-        } else {
-          gsap.set(searchBarRef.current, {
-            opacity: 0,
-          });
+        if (searchBarRef.current) {
+          const focused = isInputFocused || document.activeElement === inputRef.current;
+          if (focused) {
+            gsap.set(searchBarRef.current, { opacity: 1 });
+          } else if (progress >= 0.7) {
+            gsap.set(searchBarRef.current, { opacity: 1 });
+          } else {
+            gsap.set(searchBarRef.current, { opacity: 0 });
+          }
         }
 
-        if (progress >= 0.7 && progress <= 0.9) {
-          const searchBarProgress = (progress - 0.7) / 0.2;
+        // Only animate if not at final position
+        if (progress < 1) {
+          if (progress >= 0.7 && progress <= 0.9) {
+            const searchBarProgress = (progress - 0.7) / 0.2;
 
-          const width = 2.2 + (searchBarFinalWidth - 2.2) * searchBarProgress;
-          const height = 2.2 + (3.5 - 2.2) * searchBarProgress;
+            const width = 2.2 + (searchBarFinalWidth - 2.2) * searchBarProgress;
+            const height = 2.2 + (3.5 - 2.2) * searchBarProgress;
 
-          const translateY = -50 + (200 - -50) * searchBarProgress;
+            const translateY = -50 + (200 - -50) * searchBarProgress;
 
-          if (searchBarRef.current) {
-            gsap.set(searchBarRef.current, {
-              width: `${width}rem`,
-              height: `${height}rem`,
-              transform: `translate(-50%, ${translateY}%)`,
-            });
-            // Hide input content during animation
-            const inputElement = searchBarRef.current.querySelector('input');
-            const buttonElement = searchBarRef.current.querySelector('button');
-            if (inputElement) {
-              gsap.set(inputElement, { opacity: 0 });
+            if (searchBarRef.current) {
+              const focused = isInputFocused || document.activeElement === inputRef.current;
+              if (!focused) {
+                gsap.set(searchBarRef.current, {
+                  width: `${width}rem`,
+                  height: `${height}rem`,
+                  transform: `translate(-50%, ${translateY}%)`,
+                });
+              }
+              // Hide input content during animation unless focused
+              const inputElement = searchBarRef.current.querySelector('input') as HTMLInputElement | null;
+              const buttonElement = searchBarRef.current.querySelector('button');
+              if (inputElement) {
+                if (focused) {
+                  gsap.set(inputElement, { opacity: 1 });
+                } else {
+                  gsap.set(inputElement, { opacity: 0 });
+                }
+              }
+              if (buttonElement && !focused) {
+                gsap.set(buttonElement, { opacity: 0 });
+              }
             }
-            if (buttonElement) {
-              gsap.set(buttonElement, { opacity: 0 });
-            }
-          }
-        } else if (progress > 0.9) {
-          if (searchBarRef.current) {
-            const finalTranslateY = isMobile ? 200 : 200;
-            gsap.set(searchBarRef.current, {
-              width: `${searchBarFinalWidth}rem`,
-              height: '3.5rem',
-              transform: `translate(-50%, ${finalTranslateY}%)`,
-            });
-            // Show input content after animation completes
-            const inputElement = searchBarRef.current.querySelector('input');
-            const buttonElement = searchBarRef.current.querySelector('button');
-            if (inputElement) {
-              gsap.set(inputElement, { opacity: 1 });
-            }
-            if (buttonElement) {
-              gsap.set(buttonElement, { opacity: 1 });
+          } else if (progress > 0.9 && progress < 1) {
+            if (searchBarRef.current) {
+              const focused = isInputFocused || document.activeElement === inputRef.current;
+              const finalTranslateY = isMobile ? 200 : 200;
+              if (!focused) {
+                gsap.set(searchBarRef.current, {
+                  width: `${searchBarFinalWidth}rem`,
+                  height: '3.5rem',
+                  transform: `translate(-50%, ${finalTranslateY}%)`,
+                });
+              }
+              // Show input content after animation completes or if focused
+              const inputElement = searchBarRef.current.querySelector('input') as HTMLInputElement | null;
+              const buttonElement = searchBarRef.current.querySelector('button');
+              if (inputElement) {
+                gsap.set(inputElement, { opacity: focused ? 1 : 1 });
+              }
+              if (buttonElement && !focused) {
+                gsap.set(buttonElement, { opacity: 1 });
+              }
             }
           }
         }
@@ -387,6 +454,22 @@ const DeepJudgeScroll = () => {
         styleElement.remove();
       }
     };
+  }, [isInputFocused]);
+
+  // Create a portal container for the search bar so it isn't affected by GSAP layout transforms
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const portal = document.createElement('div');
+    portal.setAttribute('id', 'howitworks-search-portal');
+    document.body.appendChild(portal);
+    portalContainerRef.current = portal;
+    setPortalReady(true);
+
+    return () => {
+      if (portal && portal.parentNode) portal.parentNode.removeChild(portal);
+      portalContainerRef.current = null;
+      setPortalReady(false);
+    };
   }, []);
 
   const features = [
@@ -399,6 +482,16 @@ const DeepJudgeScroll = () => {
     'Monitor your Performance',
     'AI Voice Assistant',
   ];
+
+  // Get responsive width for search bar
+  const getSearchBarFinalWidth = () => {
+    if (typeof window === 'undefined') return 22;
+    const width = window.innerWidth;
+    if (width < 768) return 22;
+    if (width < 1024) return 20;
+    if (width < 1440) return 26;
+    return 22;
+  };
 
   return (
     <div className="bg-[#0f0f0f] text-white font-serif">
@@ -439,6 +532,8 @@ const DeepJudgeScroll = () => {
               Get started in minutes and start trading smarter today
             </p>
           </div>
+          {/* invisible anchor used to position the portal search bar */}
+          <div ref={anchorRef} style={{ position: 'absolute', left: '50%', top: '50%', width: 1, height: 1, pointerEvents: 'none', transform: 'translate(-50%, -50%)' }} />
         </div>
 
         {/* Header */}
@@ -501,43 +596,70 @@ const DeepJudgeScroll = () => {
           ))}
         </div>
 
-        {/* Email Input Bar */}
+        {/* Email Input Bar (rendered into portal to avoid focus loss) */}
+      </section>
+      {portalReady && portalContainerRef.current && createPortal(
         <div
           ref={searchBarRef}
-          className="absolute rounded-full border-[0.35rem] border-[#262626] bg-[#141414] opacity-0 flex items-center overflow-hidden z-50 pointer-events-auto"
-          style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+          className={`rounded-full border-[0.35rem] border-[#262626] bg-[#141414] opacity-0 flex items-center overflow-hidden pointer-events-auto ${animationComplete ? 'search-bar-fixed' : ''}`}
+          style={{ 
+            position: 'fixed', 
+            left: '50%', 
+            top: '50%', 
+            transform: 'translate(-50%, -50%)', 
+            width: `${getSearchBarFinalWidth()}rem`, 
+            height: '3.5rem', 
+            zIndex: 9999 
+          }}
         >
-          <div className="w-full h-full flex items-center" onClick={(e) => e.stopPropagation()}>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Enter your Email to take part in this journey"
-              className="w-full h-full bg-transparent border-none outline-none text-white font-sans text-base px-4 placeholder:text-gray-500 placeholder:font-medium flex-1"
-              disabled={isSubmitted}
-              autoComplete="email"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitted}
-              className="px-4 h-full bg-transparent text-white hover:text-gray-300 transition-colors disabled:opacity-70 flex items-center justify-center flex-shrink-0"
-              aria-label="Submit email"
-            >
-              {isSubmitted ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              )}
-            </button>
+          <div className="w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {submitMessage && (
+              <div className={`text-center text-sm font-medium ${submitError ? 'text-red-400' : 'text-green-400'}`}>
+                {submitMessage}
+              </div>
+            )}
+            {!submitMessage && (
+              <div className="w-full h-full flex items-center" onClick={(e) => e.stopPropagation()}>
+                <input
+                  ref={(el) => { inputRef.current = el; }}
+                  onMouseDown={(e) => { e.stopPropagation(); setTimeout(() => { inputRef.current?.focus(); }, 0); }}
+                  onFocus={() => setIsInputFocused(true)}
+                  onBlur={() => setIsInputFocused(false)}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  tabIndex={0}
+                  aria-label="Email input"
+                  placeholder="Enter your Email to be a part of it"
+                  className="w-full h-full bg-transparent border-none outline-none text-white font-sans text-base px-4 py-3 placeholder:text-gray-500 placeholder:font-medium flex-1"
+                  disabled={isSubmitted}
+                  autoComplete="email"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitted}
+                  className="px-4 h-full bg-transparent text-white hover:text-gray-300 transition-colors disabled:opacity-70 flex items-center justify-center flex-shrink-0"
+                  aria-label="Submit email"
+                >
+                  {isSubmitted ? (
+                    <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.3" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2a10 10 0 010 20" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </div>,
+        portalContainerRef.current
+      )}
     </div>
   );
 };
