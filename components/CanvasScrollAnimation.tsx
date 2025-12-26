@@ -27,19 +27,50 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
   const lenisRef = useRef<any>(null);
   const [navEmail, setNavEmail] = useState('');
   const [navSubmitted, setNavSubmitted] = useState(false);
+  const [navMessage, setNavMessage] = useState('');
+  const [navError, setNavError] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const handleNavSubmit = () => {
-    if (navEmail && navEmail.includes('@')) {
-      setNavSubmitted(true);
-      console.log('Nav email submitted:', navEmail);
-      const footerEl = document.getElementById('footer');
-      if (footerEl) footerEl.scrollIntoView({ behavior: 'smooth' });
+  const handleNavSubmit = async () => {
+    if (!navEmail || !navEmail.includes('@')) {
+      setNavError(true);
+      setNavMessage('Please enter a valid email');
+      return;
+    }
+    if (navSubmitted) return;
+
+    setNavSubmitted(true);
+    setNavError(false);
+    setNavMessage('');
+
+    try {
+      const res = await fetch('/api/submit-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: navEmail }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        console.error('Proxy error:', data);
+        setNavError(true);
+        setNavMessage(data?.error || data?.upstream || 'Submission failed');
+        setTimeout(() => setNavSubmitted(false), 3000);
+        return;
+      }
+
+      setNavMessage(data?.upstream || '✓ Successfully joined!');
+      setNavEmail('');
       setTimeout(() => {
-        setNavEmail('');
         setNavSubmitted(false);
+        setNavMessage('');
       }, 3000);
+    } catch (err) {
+      console.error('Error submitting email:', err);
+      setNavError(true);
+      setNavMessage('Connection error. Please try again.');
+      setTimeout(() => setNavSubmitted(false), 3000);
     }
   };
 
@@ -446,35 +477,44 @@ const CanvasScrollAnimation: React.FC<CanvasScrollAnimationProps> = ({
               style={{ width: '240px', maxWidth: '28vw' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <input
-                type="email"
-                value={navEmail}
-                onChange={(e) => setNavEmail(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNavSubmit(); } }}
-                placeholder={isMobile ? "Email" : "Enter your email"}
-                className="w-full h-8 md:h-4 bg-transparent border-none outline-none text-white font-sans text-[15px] md:text-xs px-5 md:px-3 placeholder:text-gray-500 placeholder:font-medium"
-                disabled={navSubmitted}
-                autoComplete="email"
-                aria-label="Email"
-                onClick={(e) => e.stopPropagation()}
-              />
+              {navMessage ? (
+                <div className={`w-full h-8 md:h-4 flex items-center justify-center text-xs font-medium px-5 ${navError ? 'text-red-400' : 'text-green-400'}`}>
+                  {navMessage}
+                </div>
+              ) : (
+                <>
+                  <input
+                    type="email"
+                    value={navEmail}
+                    onChange={(e) => setNavEmail(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleNavSubmit(); } }}
+                    placeholder={isMobile ? "Email" : "Enter your email"}
+                    className="w-full h-10 md:h-6 bg-transparent border-none outline-none text-white font-sans text-[15px] md:text-sm px-5 md:px-3 py-2 placeholder:text-gray-500 placeholder:font-medium"
+                    disabled={navSubmitted}
+                    autoComplete="email"
+                    aria-label="Email"
+                    onClick={(e) => e.stopPropagation()}
+                  />
 
-              <button
-                onClick={(e) => { e.preventDefault(); handleNavSubmit(); }}
-                disabled={navSubmitted}
-                className="px-2 h-8 bg-transparent text-white hover:text-gray-300 transition-colors disabled:opacity-70 flex items-center justify-center flex-shrink-0"
-                aria-label="Submit email"
-              >
-                {navSubmitted ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                )}
-              </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); handleNavSubmit(); }}
+                    disabled={navSubmitted}
+                    className="px-2 h-12 md:h-8 bg-transparent text-white hover:text-gray-300 transition-colors disabled:opacity-70 flex items-center justify-center flex-shrink-0"
+                    aria-label="Submit email"
+                  >
+                    {navSubmitted ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.3" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2a10 10 0 010 20" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </nav>
