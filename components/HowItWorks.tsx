@@ -18,15 +18,31 @@ const DeepJudgeScroll = () => {
   const featureBgRefs = useRef<(HTMLDivElement | null)[]>([]);
   const featureContentRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (email && email.includes('@')) {
       setIsSubmitted(true);
-      console.log('Email submitted:', email);
-      // TODO: Add your email submission logic here (API call, etc.)
-      setTimeout(() => {
-        setEmail('');
-        setIsSubmitted(false);
-      }, 3000);
+      try {
+        const response = await fetch('/api/submit-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to submit email');
+        }
+
+        console.log('Email submitted successfully:', email);
+      } catch (error) {
+        console.error('Error submitting email:', error);
+      } finally {
+        setTimeout(() => {
+          setEmail('');
+          setIsSubmitted(false);
+        }, 3000);
+      }
     }
   };
 
