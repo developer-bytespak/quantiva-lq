@@ -44,6 +44,20 @@ const DeepJudgeScroll = () => {
     setIsInputFocused(false);
   };
 
+  // Handle scroll event to blur input if user scrolls while typing
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isInputFocused && inputRef.current) {
+        inputRef.current.blur();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isInputFocused]);
+
   useEffect(() => {
     // Inject styles to avoid hydration errors
     const styleId = 'how-it-works-styles';
@@ -378,6 +392,10 @@ const DeepJudgeScroll = () => {
       if (styleElement) {
         styleElement.remove();
       }
+      
+      // Re-enable scroll on cleanup
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, []);
 
