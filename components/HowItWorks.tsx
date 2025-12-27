@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -11,67 +10,79 @@ const DeepJudgeScroll = () => {
   const headerContentRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const anchorRef = useRef<HTMLDivElement | null>(null);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const portalContainerRef = useRef<HTMLDivElement | null>(null);
-  const [portalReady, setPortalReady] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState('');
-  const [submitError, setSubmitError] = useState(false);
-  const [animationComplete, setAnimationComplete] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
   const featureBgRefs = useRef<(HTMLDivElement | null)[]>([]);
   const featureContentRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  const validateEmail = (email: string) => {
+    // Simple email regex for validation
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const handleSubmit = async () => {
-    if (!email || !email.includes('@')) {
-      setSubmitError(true);
-      setSubmitMessage('Please enter a valid email');
+    if (!validateEmail(email)) {
+      setEmailError('Please enter valid email');
       return;
     }
-    if (isSubmitted) return;
-
+    setEmailError('');
     setIsSubmitted(true);
-    setSubmitError(false);
-    setSubmitMessage('');
-
     try {
-      const res = await fetch('/api/submit-email', {
+      const response = await fetch('/api/submit-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        console.error('Proxy error:', data);
-        setSubmitError(true);
-        setSubmitMessage(data?.error || data?.upstream || 'Submission failed');
-        setTimeout(() => setIsSubmitted(false), 3000);
-        return;
+      if (!response.ok) {
+        throw new Error('Failed to submit email');
       }
 
-      setSubmitMessage(data?.upstream || '✓ Successfully joined!');
-      setEmail('');
+      console.log('Email submitted successfully:', email);
+    } catch (error) {
+      console.error('Error submitting email:', error);
+    } finally {
       setTimeout(() => {
+        setEmail('');
         setIsSubmitted(false);
-        setSubmitMessage('');
       }, 3000);
-    } catch (err) {
-      console.error('Error submitting email:', err);
-      setSubmitError(true);
-      setSubmitMessage('Connection error. Please try again.');
-      setTimeout(() => setIsSubmitted(false), 3000);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       handleSubmit();
     }
   };
+
+  const handleInputFocus = () => {
+    setIsInputFocused(true);
+  };
+
+  const handleInputBlur = () => {
+    setIsInputFocused(false);
+  };
+
+  // Handle scroll event to blur input if user scrolls while typing
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isInputFocused && inputRef.current) {
+        inputRef.current.blur();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isInputFocused]);
 
   useEffect(() => {
     // Inject styles to avoid hydration errors
@@ -123,30 +134,11 @@ const DeepJudgeScroll = () => {
           background-size: 100% 100%;
           animation: twinkle 8s ease-in-out infinite;
         }
-        
-        .search-bar-fixed {
-          position: fixed !important;
-          top: 50% !important;
-          left: 50% !important;
-          transform: translate(-50%, -50%) !important;
-        }
       `;
       document.head.appendChild(style);
     }
 
     gsap.registerPlugin(ScrollTrigger);
-
-    // Smooth scroll setup
-    let scrollTimeout: NodeJS.Timeout | undefined;
-    const smoothScroll = () => {
-      if (scrollTimeout) {
-        clearTimeout(scrollTimeout);
-      }
-      scrollTimeout = setTimeout(() => {
-        ScrollTrigger.refresh();
-      }, 100);
-    };
-    window.addEventListener('scroll', smoothScroll);
 
     const features = featureRefs.current;
     const featureBgs = featureBgRefs.current;
@@ -263,16 +255,13 @@ const DeepJudgeScroll = () => {
       end: `+=${window.innerHeight * scrollEndMultiplier}px`,
       pin: true,
       pinSpacing: true,
+      pinType: 'transform',  // Use transform-based pinning to prevent DOM manipulation
       scrub: isMobile ? 0.5 : 1,  // Faster animation on mobile (less scrub = faster)
       onUpdate: (self) => {
         const progress = self.progress;
 
-        // Check if animation is complete
-        if (progress >= 1) {
-          setAnimationComplete(true);
-        } else {
-          setAnimationComplete(false);
-        }
+        // Check if input is focused - if so, don't manipulate it
+        const inputIsFocused = document.activeElement === inputRef.current;
 
         if (progress <= 0.3333) {
           const spotlightHeaderProgress = progress / 0.3333;
@@ -284,7 +273,6 @@ const DeepJudgeScroll = () => {
             y: '-100%',
           });
         }
-
 
         // Features merge and fade out: 0 - 0.7
         if (progress >= 0 && progress <= 0.7) {
@@ -357,72 +345,50 @@ const DeepJudgeScroll = () => {
           });
         }
 
-        // Email input bar appears after features are gone (0.7 - 0.9)
-        if (searchBarRef.current) {
-          const focused = isInputFocused || document.activeElement === inputRef.current;
-          if (focused) {
-            gsap.set(searchBarRef.current, { opacity: 1 });
-          } else if (progress >= 0.7) {
-            gsap.set(searchBarRef.current, { opacity: 1 });
-          } else {
-            gsap.set(searchBarRef.current, { opacity: 0 });
+        // Email input bar animation (0.7 - 1.0)
+        if (progress >= 0.7 && progress <= 0.9) {
+          const searchBarProgress = (progress - 0.7) / 0.2;
+
+          const width = 2.2 + (searchBarFinalWidth - 2.2) * searchBarProgress;
+          const height = 2.2 + (3.5 - 2.2) * searchBarProgress;
+          const translateY = -50 + (200 - -50) * searchBarProgress;
+          
+          // Fade in the entire container
+          const containerOpacity = Math.min(searchBarProgress * 2, 1);
+
+          if (searchBarRef.current && !inputIsFocused) {
+            gsap.set(searchBarRef.current, {
+              width: `${width}rem`,
+              height: `${height}rem`,
+              transform: `translate(-50%, ${translateY}%)`,
+              opacity: containerOpacity,
+              pointerEvents: 'none', // Disable interaction during animation
+            });
           }
-        }
-
-        // Only animate if not at final position
-        if (progress < 1) {
-          if (progress >= 0.7 && progress <= 0.9) {
-            const searchBarProgress = (progress - 0.7) / 0.2;
-
-            const width = 2.2 + (searchBarFinalWidth - 2.2) * searchBarProgress;
-            const height = 2.2 + (3.5 - 2.2) * searchBarProgress;
-
-            const translateY = -50 + (200 - -50) * searchBarProgress;
-
-            if (searchBarRef.current) {
-              const focused = isInputFocused || document.activeElement === inputRef.current;
-              if (!focused) {
-                gsap.set(searchBarRef.current, {
-                  width: `${width}rem`,
-                  height: `${height}rem`,
-                  transform: `translate(-50%, ${translateY}%)`,
-                });
-              }
-              // Hide input content during animation unless focused
-              const inputElement = searchBarRef.current.querySelector('input') as HTMLInputElement | null;
-              const buttonElement = searchBarRef.current.querySelector('button');
-              if (inputElement) {
-                if (focused) {
-                  gsap.set(inputElement, { opacity: 1 });
-                } else {
-                  gsap.set(inputElement, { opacity: 0 });
-                }
-              }
-              if (buttonElement && !focused) {
-                gsap.set(buttonElement, { opacity: 0 });
-              }
-            }
-          } else if (progress > 0.9 && progress < 1) {
-            if (searchBarRef.current) {
-              const focused = isInputFocused || document.activeElement === inputRef.current;
-              const finalTranslateY = isMobile ? 200 : 200;
-              if (!focused) {
-                gsap.set(searchBarRef.current, {
-                  width: `${searchBarFinalWidth}rem`,
-                  height: '3.5rem',
-                  transform: `translate(-50%, ${finalTranslateY}%)`,
-                });
-              }
-              // Show input content after animation completes or if focused
-              const inputElement = searchBarRef.current.querySelector('input') as HTMLInputElement | null;
-              const buttonElement = searchBarRef.current.querySelector('button');
-              if (inputElement) {
-                gsap.set(inputElement, { opacity: focused ? 1 : 1 });
-              }
-              if (buttonElement && !focused) {
-                gsap.set(buttonElement, { opacity: 1 });
-              }
-            }
+        } else if (progress > 0.9) {
+          // Animation complete - input is now fully interactive
+          if (searchBarRef.current && !inputIsFocused) {
+            gsap.set(searchBarRef.current, {
+              width: `${searchBarFinalWidth}rem`,
+              height: '3.5rem',
+              transform: `translate(-50%, 200%)`,
+              opacity: 1,
+              pointerEvents: 'auto', // Enable interaction
+            });
+          } else if (searchBarRef.current && inputIsFocused) {
+            // If input is focused, only update pointer events, not position/size
+            gsap.set(searchBarRef.current, {
+              pointerEvents: 'auto',
+              opacity: 1,
+            });
+          }
+        } else {
+          // Before 0.7 - hide completely
+          if (searchBarRef.current && !inputIsFocused) {
+            gsap.set(searchBarRef.current, {
+              opacity: 0,
+              pointerEvents: 'none',
+            });
           }
         }
 
@@ -445,7 +411,6 @@ const DeepJudgeScroll = () => {
     return () => {
       scrollTrigger.kill();
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', smoothScroll);
       ScrollTrigger.getAll().forEach(st => st.kill());
       
       // Clean up style element
@@ -453,22 +418,10 @@ const DeepJudgeScroll = () => {
       if (styleElement) {
         styleElement.remove();
       }
-    };
-  }, [isInputFocused]);
-
-  // Create a portal container for the search bar so it isn't affected by GSAP layout transforms
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const portal = document.createElement('div');
-    portal.setAttribute('id', 'howitworks-search-portal');
-    document.body.appendChild(portal);
-    portalContainerRef.current = portal;
-    setPortalReady(true);
-
-    return () => {
-      if (portal && portal.parentNode) portal.parentNode.removeChild(portal);
-      portalContainerRef.current = null;
-      setPortalReady(false);
+      
+      // Re-enable scroll on cleanup
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, []);
 
@@ -482,16 +435,6 @@ const DeepJudgeScroll = () => {
     'Monitor your Performance',
     'AI Voice Assistant',
   ];
-
-  // Get responsive width for search bar
-  const getSearchBarFinalWidth = () => {
-    if (typeof window === 'undefined') return 22;
-    const width = window.innerWidth;
-    if (width < 768) return 22;
-    if (width < 1024) return 20;
-    if (width < 1440) return 26;
-    return 22;
-  };
 
   return (
     <div className="bg-[#0f0f0f] text-white font-serif">
@@ -532,19 +475,16 @@ const DeepJudgeScroll = () => {
               Get started in minutes and start trading smarter today
             </p>
           </div>
-          {/* invisible anchor used to position the portal search bar */}
-          <div ref={anchorRef} style={{ position: 'absolute', left: '50%', top: '50%', width: 1, height: 1, pointerEvents: 'none', transform: 'translate(-50%, -50%)' }} />
         </div>
 
         {/* Header */}
         <div className="absolute w-full h-full flex justify-center items-center z-40">
           <div
-            id="header-content-ref"
             ref={headerContentRef}
             className="w-full md:w-3/5 flex flex-col items-center text-center gap-8 px-8 opacity-0"
             style={{ transform: 'translateY(-100px)' }}
           >
-            <h1 className="text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-medium bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent leading-[1.1] tracking-wider mb-8 md:mb-0">
+            <h1 className="text-3xl md:text-3xl lg:text-4xl xl:text-5xl font-medium bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent leading-[1.1] tracking-wider">
               Join us in shaping the future of Intelligent Trading
             </h1>
             <p className="font-sans text-base md:text-lg font-normal leading-relaxed text-gray-300">
@@ -554,11 +494,6 @@ const DeepJudgeScroll = () => {
             <style jsx>{`
               @media (max-width: 767px) {
                 .howitworks-mobile-pb { padding-bottom: 8rem; }
-              }
-              @media (min-width: 1024px) {
-                #header-content-ref {
-                  transform: translateY(-80px) !important;
-                }
               }
             `}</style>
             <span className="howitworks-mobile-pb block md:hidden" />
@@ -596,70 +531,51 @@ const DeepJudgeScroll = () => {
           ))}
         </div>
 
-        {/* Email Input Bar (rendered into portal to avoid focus loss) */}
-      </section>
-      {portalReady && portalContainerRef.current && createPortal(
+        {/* Email Input Bar */}
         <div
           ref={searchBarRef}
-          className={`rounded-full border-[0.35rem] border-[#262626] bg-[#141414] opacity-0 flex items-center overflow-hidden pointer-events-auto ${animationComplete ? 'search-bar-fixed' : ''}`}
-          style={{ 
-            position: 'fixed', 
-            left: '50%', 
-            top: '50%', 
-            transform: 'translate(-50%, -50%)', 
-            width: `${getSearchBarFinalWidth()}rem`, 
-            height: '3.5rem', 
-            zIndex: 9999 
-          }}
+          className="absolute rounded-full border-[0.35rem] border-[#262626] bg-[#141414] opacity-0 flex items-center overflow-hidden z-50"
+          style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}
         >
-          <div className="w-full h-full flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            {submitMessage && (
-              <div className={`text-center text-sm font-medium ${submitError ? 'text-red-400' : 'text-green-400'}`}>
-                {submitMessage}
-              </div>
+          <div className="w-full h-full flex items-center">
+            <input
+              ref={inputRef}
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError('');
+              }}
+              onKeyDown={handleKeyDown}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+              placeholder="Enter your Email to take part in this journey"
+              className="w-full h-full bg-transparent border-none outline-none text-white font-sans text-base px-4 placeholder:text-gray-500 placeholder:font-medium flex-1"
+              disabled={isSubmitted}
+              autoComplete="email"
+            />
+            {emailError && (
+              <span className="text-red-500 text-sm ml-4 my-2 block">{emailError}</span>
             )}
-            {!submitMessage && (
-              <div className="w-full h-full flex items-center" onClick={(e) => e.stopPropagation()}>
-                <input
-                  ref={(el) => { inputRef.current = el; }}
-                  onMouseDown={(e) => { e.stopPropagation(); setTimeout(() => { inputRef.current?.focus(); }, 0); }}
-                  onFocus={() => setIsInputFocused(true)}
-                  onBlur={() => setIsInputFocused(false)}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  tabIndex={0}
-                  aria-label="Email input"
-                  placeholder="Enter your Email to be a part of it"
-                  className="w-full h-full bg-transparent border-none outline-none text-white font-sans text-base px-4 py-3 placeholder:text-gray-500 placeholder:font-medium flex-1"
-                  disabled={isSubmitted}
-                  autoComplete="email"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <button
-                  onClick={handleSubmit}
-                  disabled={isSubmitted}
-                  className="px-4 h-full bg-transparent text-white hover:text-gray-300 transition-colors disabled:opacity-70 flex items-center justify-center flex-shrink-0"
-                  aria-label="Submit email"
-                >
-                  {isSubmitted ? (
-                    <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.3" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2a10 10 0 010 20" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            )}
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitted}
+              className="px-4 h-full bg-transparent text-white hover:text-gray-300 transition-colors disabled:opacity-70 flex items-center justify-center flex-shrink-0"
+              aria-label="Submit email"
+            >
+              {isSubmitted ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              )}
+            </button>
           </div>
-        </div>,
-        portalContainerRef.current
-      )}
+        </div>
+      </section>
     </div>
   );
 };
