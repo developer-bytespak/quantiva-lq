@@ -14,40 +14,50 @@ const DeepJudgeScroll = () => {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
   const featureBgRefs = useRef<(HTMLDivElement | null)[]>([]);
   const featureContentRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  const validateEmail = (email: string) => {
+    // Simple email regex for validation
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const handleSubmit = async () => {
-    if (email && email.includes('@')) {
-      setIsSubmitted(true);
-      try {
-        const response = await fetch('/api/submit-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email }),
-        });
+    if (!validateEmail(email)) {
+      setEmailError('Please enter valid email');
+      return;
+    }
+    setEmailError('');
+    setIsSubmitted(true);
+    try {
+      const response = await fetch('/api/submit-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
 
-        if (!response.ok) {
-          throw new Error('Failed to submit email');
-        }
-
-        console.log('Email submitted successfully:', email);
-      } catch (error) {
-        console.error('Error submitting email:', error);
-      } finally {
-        setTimeout(() => {
-          setEmail('');
-          setIsSubmitted(false);
-        }, 3000);
+      if (!response.ok) {
+        throw new Error('Failed to submit email');
       }
+
+      console.log('Email submitted successfully:', email);
+    } catch (error) {
+      console.error('Error submitting email:', error);
+    } finally {
+      setTimeout(() => {
+        setEmail('');
+        setIsSubmitted(false);
+      }, 3000);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       handleSubmit();
     }
   };
@@ -532,8 +542,11 @@ const DeepJudgeScroll = () => {
               ref={inputRef}
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError('');
+              }}
+              onKeyDown={handleKeyDown}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
               placeholder="Enter your Email to take part in this journey"
@@ -541,6 +554,9 @@ const DeepJudgeScroll = () => {
               disabled={isSubmitted}
               autoComplete="email"
             />
+            {emailError && (
+              <span className="text-red-500 text-sm ml-4 my-2 block">{emailError}</span>
+            )}
             <button
               onClick={handleSubmit}
               disabled={isSubmitted}
