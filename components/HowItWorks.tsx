@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -10,79 +10,9 @@ const DeepJudgeScroll = () => {
   const headerContentRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [email, setEmail] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  const [emailError, setEmailError] = useState('');
   const featureRefs = useRef<(HTMLDivElement | null)[]>([]);
   const featureBgRefs = useRef<(HTMLDivElement | null)[]>([]);
   const featureContentRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  const validateEmail = (email: string) => {
-    // Simple email regex for validation
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
-  const handleSubmit = async () => {
-    if (!validateEmail(email)) {
-      setEmailError('Please enter valid email');
-      return;
-    }
-    setEmailError('');
-    setIsSubmitted(true);
-    try {
-      const response = await fetch('/api/submit-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit email');
-      }
-
-      console.log('Email submitted successfully:', email);
-    } catch (error) {
-      console.error('Error submitting email:', error);
-    } finally {
-      setTimeout(() => {
-        setEmail('');
-        setIsSubmitted(false);
-      }, 3000);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
-
-  const handleInputFocus = () => {
-    setIsInputFocused(true);
-  };
-
-  const handleInputBlur = () => {
-    setIsInputFocused(false);
-  };
-
-  // Handle scroll event to blur input if user scrolls while typing
-  useEffect(() => {
-    const handleScroll = () => {
-      if (isInputFocused && inputRef.current) {
-        inputRef.current.blur();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [isInputFocused]);
 
   useEffect(() => {
     // Inject styles to avoid hydration errors
@@ -260,9 +190,6 @@ const DeepJudgeScroll = () => {
       onUpdate: (self) => {
         const progress = self.progress;
 
-        // Check if input is focused - if so, don't manipulate it
-        const inputIsFocused = document.activeElement === inputRef.current;
-
         if (progress <= 0.3333) {
           const spotlightHeaderProgress = progress / 0.3333;
           gsap.set(spotlightContentRef.current, {
@@ -356,35 +283,27 @@ const DeepJudgeScroll = () => {
           // Fade in the entire container
           const containerOpacity = Math.min(searchBarProgress * 2, 1);
 
-          if (searchBarRef.current && !inputIsFocused) {
+          if (searchBarRef.current) {
             gsap.set(searchBarRef.current, {
               width: `${width}rem`,
               height: `${height}rem`,
               transform: `translate(-50%, ${translateY}%)`,
               opacity: containerOpacity,
-              pointerEvents: 'none', // Disable interaction during animation
+              pointerEvents: 'none',
             });
           }
         } else if (progress > 0.9) {
-          // Animation complete - input is now fully interactive
-          if (searchBarRef.current && !inputIsFocused) {
+          if (searchBarRef.current) {
             gsap.set(searchBarRef.current, {
               width: `${searchBarFinalWidth}rem`,
               height: '3.5rem',
               transform: `translate(-50%, 200%)`,
               opacity: 1,
-              pointerEvents: 'auto', // Enable interaction
-            });
-          } else if (searchBarRef.current && inputIsFocused) {
-            // If input is focused, only update pointer events, not position/size
-            gsap.set(searchBarRef.current, {
               pointerEvents: 'auto',
-              opacity: 1,
             });
           }
         } else {
-          // Before 0.7 - hide completely
-          if (searchBarRef.current && !inputIsFocused) {
+          if (searchBarRef.current) {
             gsap.set(searchBarRef.current, {
               opacity: 0,
               pointerEvents: 'none',
@@ -531,49 +450,15 @@ const DeepJudgeScroll = () => {
           ))}
         </div>
 
-        {/* Email Input Bar */}
+        {/* Motivational message bar (replaces email input) */}
         <div
           ref={searchBarRef}
-          className="absolute rounded-full border-[0.35rem] border-[#262626] bg-[#141414] opacity-0 flex items-center overflow-hidden z-50"
+          className="absolute rounded-full border-[0.35rem] border-[#262626] bg-[#141414] opacity-0 flex items-center justify-center overflow-hidden z-50"
           style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}
         >
-          <div className="w-full h-full flex items-center">
-            <input
-              ref={inputRef}
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (emailError) setEmailError('');
-              }}
-              onKeyDown={handleKeyDown}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
-              placeholder="Enter your Email to take part in this journey"
-              className="w-full h-full bg-transparent border-none outline-none text-white font-sans text-base px-4 placeholder:text-gray-500 placeholder:font-medium flex-1"
-              disabled={isSubmitted}
-              autoComplete="email"
-            />
-            {emailError && (
-              <span className="text-red-500 text-sm ml-4 my-2 block">{emailError}</span>
-            )}
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitted}
-              className="px-4 h-full bg-transparent text-white hover:text-gray-300 transition-colors disabled:opacity-70 flex items-center justify-center flex-shrink-0"
-              aria-label="Submit email"
-            >
-              {isSubmitted ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              )}
-            </button>
-          </div>
+          <p className="text-white font-sans text-sm md:text-base font-medium px-6 py-3 text-center">
+            Stay curious. Trade smarter.
+          </p>
         </div>
       </section>
     </div>

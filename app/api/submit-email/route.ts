@@ -27,36 +27,44 @@ async function getRedis() {
   }
 }
 
-async function parseEmailFromRequest(req: Request) {
+async function parseContactFromRequest(req: Request): Promise<{ email: string; name: string }> {
   const contentType = (req.headers.get('content-type') || '').toLowerCase();
   let email = '';
+  let name = '';
 
   if (contentType.includes('application/json')) {
     const body = await req.json().catch(() => ({}));
-    email = body?.email || '';
+    email = body?.email ?? '';
+    name = body?.name ?? '';
   } else if (contentType.includes('application/x-www-form-urlencoded')) {
     const text = await req.text();
     const params = new URLSearchParams(text);
-    email = params.get('email') || '';
+    email = params.get('email') ?? '';
+    name = params.get('name') ?? '';
   } else {
     try {
       const body = await req.json();
-      email = body?.email || '';
+      email = body?.email ?? '';
+      name = body?.name ?? '';
     } catch (e) {
       const text = await req.text();
       const params = new URLSearchParams(text);
-      email = params.get('email') || '';
+      email = params.get('email') ?? '';
+      name = params.get('name') ?? '';
     }
   }
 
-  return (typeof email === 'string') ? email.trim() : '';
+  return {
+    email: (typeof email === 'string') ? email.trim() : '',
+    name: (typeof name === 'string') ? name.trim() : '',
+  };
 }
 
 export async function POST(req: Request) {
   try {
-    const email = await parseEmailFromRequest(req);
+    const { email, name } = await parseContactFromRequest(req);
     if (!email) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
-    const item = { email, createdAt: new Date().toISOString() };
+    const item = { email, ...(name && { name }), createdAt: new Date().toISOString() };
 
     // Try plain Redis (REDIS_URL) as a fallback
     const redis = await getRedis();
