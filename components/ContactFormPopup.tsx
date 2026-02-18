@@ -137,21 +137,21 @@ export default function ContactFormPopup() {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70"
       role="dialog"
       aria-modal="true"
       aria-labelledby="contact-form-title"
       onClick={closePopup}
     >
       <div
-        className="relative w-full max-w-md bg-white rounded-lg shadow-xl border border-gray-200 p-6 sm:p-8"
+        className="relative w-full max-w-md bg-[#141414] rounded-lg shadow-xl border-2 border-[#262626] p-6 sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close (cross) icon */}
         <button
           type="button"
           onClick={closePopup}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-gray-700/50 transition-colors"
           aria-label="Close contact form"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,12 +159,12 @@ export default function ContactFormPopup() {
           </svg>
         </button>
 
-        <h2 id="contact-form-title" className="text-xl sm:text-2xl font-bold text-black mb-6 text-center pr-8">
+        <h2 id="contact-form-title" className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] bg-clip-text text-transparent mb-6 text-center pr-8">
           Contact us
         </h2>
 
         {status === 'success' ? (
-          <p className="text-green-600 font-medium">Thank you! We&apos;ll be in touch soon.</p>
+          <p className="text-emerald-400 font-medium text-center text-lg">Thank You, Email Received</p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -177,7 +177,7 @@ export default function ContactFormPopup() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Enter your full name"
-                className="w-full bg-transparent border-0 border-b border-gray-300 py-2 text-gray-900 placeholder-gray-600 focus:outline-none focus:border-black focus:ring-0"
+                className="w-full bg-transparent border-0 border-b border-gray-600 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-[#ffa500] focus:ring-0"
                 autoComplete="name"
               />
             </div>
@@ -191,18 +191,18 @@ export default function ContactFormPopup() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full bg-transparent border-0 border-b border-gray-300 py-2 text-gray-900 placeholder-gray-600 focus:outline-none focus:border-black focus:ring-0"
+                className="w-full bg-transparent border-0 border-b border-gray-600 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-[#ffa500] focus:ring-0"
                 autoComplete="email"
                 required
               />
             </div>
             {errorMessage && (
-              <p className="text-sm text-red-600">{errorMessage}</p>
+              <p className="text-sm text-red-400">{errorMessage}</p>
             )}
             <button
               type="submit"
               disabled={status === 'sending'}
-              className="w-full py-3 px-4 border-2 border-black text-black font-semibold uppercase tracking-wide hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full py-3 px-4 rounded-lg font-semibold uppercase tracking-wide bg-gradient-to-r from-[#f86c24] via-[#ffa500] to-[#ffd700] text-black hover:opacity-90 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
             >
               {status === 'sending' ? 'Sending…' : 'Send'}
             </button>
