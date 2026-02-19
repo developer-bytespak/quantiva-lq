@@ -2,9 +2,13 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { createClient as createRedisClient } from 'redis';
+import { getSupabaseServer } from '@/lib/supabase-server';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DATA_FILE = path.join(DATA_DIR, 'emails.json');
+
+/** Supabase table name for contact submissions (id, name, email). Set via env SUPABASE_CONTACTS_TABLE if different. */
+const SUPABASE_CONTACTS_TABLE = process.env.SUPABASE_CONTACTS_TABLE ?? 'Leads';
 
 
 let cachedRedis: any = null;
@@ -27,38 +31,58 @@ async function getRedis() {
   }
 }
 
-async function parseEmailFromRequest(req: Request) {
+async function parseContactFromRequest(req: Request): Promise<{ email: string; name: string }> {
   const contentType = (req.headers.get('content-type') || '').toLowerCase();
   let email = '';
+  let name = '';
 
   if (contentType.includes('application/json')) {
     const body = await req.json().catch(() => ({}));
-    email = body?.email || '';
+    email = body?.email ?? '';
+    name = body?.name ?? '';
   } else if (contentType.includes('application/x-www-form-urlencoded')) {
     const text = await req.text();
     const params = new URLSearchParams(text);
-    email = params.get('email') || '';
+    email = params.get('email') ?? '';
+    name = params.get('name') ?? '';
   } else {
     try {
       const body = await req.json();
-      email = body?.email || '';
+      email = body?.email ?? '';
+      name = body?.name ?? '';
     } catch (e) {
       const text = await req.text();
       const params = new URLSearchParams(text);
-      email = params.get('email') || '';
+      email = params.get('email') ?? '';
+      name = params.get('name') ?? '';
     }
   }
 
-  return (typeof email === 'string') ? email.trim() : '';
+  return {
+    email: (typeof email === 'string') ? email.trim() : '',
+    name: (typeof name === 'string') ? name.trim() : '',
+  };
 }
 
 export async function POST(req: Request) {
   try {
-    const email = await parseEmailFromRequest(req);
+    const { email, name } = await parseContactFromRequest(req);
     if (!email) return NextResponse.json({ error: 'Missing email' }, { status: 400 });
-    const item = { email, createdAt: new Date().toISOString() };
 
-    // Try plain Redis (REDIS_URL) as a fallback
+    // 1) Try Supabase first (table with id, name, email)
+    const supabase = getSupabaseServer();
+    if (supabase) {
+      const { error } = await supabase
+        .from(SUPABASE_CONTACTS_TABLE)
+        .insert({ name: name || null, email });
+      if (!error) return NextResponse.json({ ok: true });
+      console.error('Supabase insert failed:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const item = { email, ...(name && { name }), createdAt: new Date().toISOString() };
+
+    // 2) Fallback: Redis (REDIS_URL)
     const redis = await getRedis();
     if (redis) {
       try {
