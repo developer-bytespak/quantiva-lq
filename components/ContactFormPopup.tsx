@@ -42,8 +42,11 @@ export default function ContactFormPopup() {
       e.preventDefault();
     };
     const preventKeys = (e: KeyboardEvent) => {
-      // Allow closing with Escape, and allow typing into inputs.
       if (e.key === 'Escape') return;
+      // Don't block keys when typing in an input or textarea (e.g. space in name field).
+      const target = e.target as HTMLElement;
+      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      if (isInput) return;
       const blockedKeys = new Set([
         'ArrowUp',
         'ArrowDown',
